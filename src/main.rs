@@ -1,3 +1,5 @@
+#[macro_use]
+mod io;
 mod cli;
 
 fn main() {
