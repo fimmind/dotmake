@@ -1,6 +1,7 @@
 mod cli;
-use cli::Cli;
 
 fn main() {
-    Cli::init().run_subcommand().unwrap()
+    cli::SUBCOMMAND
+        .perform()
+        .unwrap_or_else(|_| todo!("Error handling"))
 }
