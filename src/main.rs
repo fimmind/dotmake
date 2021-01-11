@@ -1,4 +1,5 @@
 #![feature(type_alias_impl_trait)]
+#![allow(dead_code, unused_variables)] // TODO: Remove it before releasing
 
 #[macro_use]
 extern crate serde_derive;
