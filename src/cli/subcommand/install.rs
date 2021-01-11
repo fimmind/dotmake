@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::config::Identifier;
 use std::collections::HashSet;
 use std::error::Error;
 use structopt::StructOpt;
