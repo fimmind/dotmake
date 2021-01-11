@@ -29,7 +29,7 @@ impl Options {
     }
 
     pub fn distro_id(&self) -> Option<&str> {
-        self.distro_id.map(|s| s.as_str())
+        self.distro_id.as_ref().map(|s| s.as_str())
     }
 
     pub fn noconfirm(&self) -> bool {
