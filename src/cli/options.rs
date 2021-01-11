@@ -1,7 +1,5 @@
-use structopt::StructOpt;
-use std::error::Error;
 use std::path::PathBuf;
-use std::process;
+use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 pub struct Options {
@@ -30,22 +28,8 @@ impl Options {
         &self.dotfiles_dir
     }
 
-    fn get_default_distro_id() -> Result<String, Box<dyn Error>> {
-        Ok(String::from_utf8(
-            process::Command::new("sed")
-                .args(&["-n", "s/^ID=//p", "/etc/os-release"])
-                .output()?
-                .stdout,
-        )?
-        .trim()
-        .to_string())
-    }
-
-    pub fn distro_id(&self) -> Result<String, Box<dyn Error>> {
-        match &self.distro_id {
-            Some(id) => Ok(id.clone()),
-            None => Self::get_default_distro_id(),
-        }
+    pub fn distro_id(&self) -> Option<&str> {
+        self.distro_id.map(|s| s.as_str())
     }
 
     pub fn noconfirm(&self) -> bool {
