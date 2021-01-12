@@ -9,6 +9,8 @@ extern crate serde;
 mod io;
 mod cli;
 mod config;
+mod deps_resolver;
+mod actions;
 
 fn main() {
     cli::SUBCOMMAND.perform().unwrap_or_else(exit_error_fn!())
