@@ -1,5 +1,4 @@
 mod parser;
-mod types;
 
 use crate::actions::{ActionsConf, RuleActions};
 use crate::deps_resolver::DepsConf;
@@ -7,7 +6,7 @@ use lazy_static::lazy_static;
 use parser::parse_config;
 use std::collections::HashMap;
 use std::error::Error;
-pub use types::*;
+use crate::identifier::Identifier;
 
 lazy_static! {
     pub static ref CONFIG: Config = parse_config().unwrap_or_else(exit_error_fn!());

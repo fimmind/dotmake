@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::config::Identifier;
+use crate::identifier::Identifier;
 
 #[derive(Debug, Deserialize)]
 pub struct ActionsConf {}

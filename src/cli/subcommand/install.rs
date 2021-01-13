@@ -1,4 +1,4 @@
-use crate::config::Identifier;
+use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
 
