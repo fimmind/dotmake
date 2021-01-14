@@ -2,11 +2,11 @@ mod parser;
 
 use crate::actions::{ActionsConf, RuleActions};
 use crate::deps_resolver::DepsConf;
+use crate::identifier::Identifier;
 use lazy_static::lazy_static;
 use parser::parse_config;
 use std::collections::HashMap;
 use std::error::Error;
-use crate::identifier::Identifier;
 
 lazy_static! {
     pub static ref CONFIG: Config = parse_config().unwrap_or_else(exit_error_fn!());
@@ -22,18 +22,18 @@ pub struct Config {
 }
 
 impl Config {
-    fn get_rule(&self, ident: &Identifier) -> Result<&RuleBody, Box<dyn Error>> {
+    pub fn get_rule_deps_conf(&self, ident: &Identifier) -> Option<&DepsConf> {
+        self.rules.get(ident).map(|rule| &rule.deps_conf)
+    }
+
+    fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleBody, Box<dyn Error>> {
         self.rules
             .get(ident)
             .ok_or_else(|| format!("Unknown rule: {}", ident).into())
     }
 
-    pub fn get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, Box<dyn Error>> {
-        self.get_rule(ident).map(|rule| &rule.deps_conf)
-    }
-
     pub fn perform_rule(&self, ident: &Identifier) -> Result<(), Box<dyn Error>> {
-        self.get_rule(ident)?
+        self.try_get_rule(ident)?
             .actions
             .perform_all(&self.actions_conf)
     }
@@ -43,7 +43,9 @@ impl Config {
         ident: &Identifier,
         actions_list: &[Identifier],
     ) -> Result<(), Box<dyn Error>> {
-        self.get_rule(ident)?.actions.perform(actions_list, &self.actions_conf)
+        self.try_get_rule(ident)?
+            .actions
+            .perform(actions_list, &self.actions_conf)
     }
 }
 

@@ -16,7 +16,7 @@ pub struct Install {
 
 impl Install {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let resolver = DepsResolver::init(self.rules.clone(), |ident| CONFIG.get_rule_deps_conf(ident));
+        let resolver = DepsResolver::init(self.rules.iter().collect(), |ident| CONFIG.get_rule_deps_conf(ident));
         for ident in resolver.try_resolve()? {
             CONFIG.perform_rule(ident)?;
         }

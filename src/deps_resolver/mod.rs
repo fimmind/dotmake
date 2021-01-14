@@ -15,23 +15,23 @@ pub struct DepsConf {
     pub synonyms: HashSet<Identifier>,
 }
 
-pub struct DepsResolver<F> {
-    roots: Vec<Identifier>,
+pub struct DepsResolver<'a, F> {
+    roots: HashSet<&'a Identifier>,
     get_deps_for: F,
 }
 
-impl<F> DepsResolver<F>
+impl<'a, F> DepsResolver<'a, F>
 where
-    F: Fn(&Identifier) -> Result<&DepsConf, Box<dyn Error>>,
+    F: Fn(&'a Identifier) -> Option<&'a DepsConf>,
 {
-    pub fn init(roots: Vec<Identifier>, get_deps_for: F) -> Self {
+    pub fn init(roots: HashSet<&'a Identifier>, get_deps_for: F) -> Self {
         DepsResolver {
             roots,
             get_deps_for,
         }
     }
 
-    pub fn try_resolve(&self) -> Result<Vec<&Identifier>, Box<dyn Error>> {
+    pub fn try_resolve(self) -> Result<Vec<&'a Identifier>, Box<dyn Error>> {
         todo!("Dependecies resolving")
     }
 }
