@@ -1,5 +1,8 @@
+mod deps_graph;
+
 use crate::deserializers::identifiers_set;
 use crate::identifier::Identifier;
+use deps_graph::{DepsGraph, DepsIter};
 use std::collections::HashSet;
 use std::error::Error;
 
@@ -10,28 +13,30 @@ pub struct DepsConf {
 
     #[serde(default, deserialize_with = "identifiers_set")]
     pub post: HashSet<Identifier>,
-
-    #[serde(default, deserialize_with = "identifiers_set")]
-    pub synonyms: HashSet<Identifier>,
 }
 
-pub struct DepsResolver<'a, F> {
-    roots: HashSet<&'a Identifier>,
-    get_deps_for: F,
+pub struct DepsResolver<'a> {
+    deps_graph: DepsGraph<&'a Identifier>,
 }
 
-impl<'a, F> DepsResolver<'a, F>
-where
-    F: Fn(&'a Identifier) -> Option<&'a DepsConf>,
-{
-    pub fn init(roots: HashSet<&'a Identifier>, get_deps_for: F) -> Self {
+impl<'a> DepsResolver<'a> {
+    pub fn init<F>(roots: impl IntoIterator<Item = &'a Identifier>, get_deps_for: F) -> Self
+    where
+        F: Fn(&'a Identifier) -> &'a DepsConf,
+    {
         DepsResolver {
-            roots,
-            get_deps_for,
+            deps_graph: Self::build_deps_graph(get_deps_for),
         }
     }
 
-    pub fn try_resolve(self) -> Result<Vec<&'a Identifier>, Box<dyn Error>> {
+    fn build_deps_graph<F>(get_deps_for: F) -> DepsGraph<&'a Identifier>
+    where
+        F: Fn(&'a Identifier) -> &'a DepsConf,
+    {
         todo!("Dependecies resolving")
+    }
+
+    pub fn try_resolve(self) -> Result<DepsIter<&'a Identifier>, Box<dyn Error>> {
+        todo!("try_resolve_deps")
     }
 }

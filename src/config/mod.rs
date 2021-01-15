@@ -22,14 +22,14 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get_rule_deps_conf(&self, ident: &Identifier) -> Option<&DepsConf> {
-        self.rules.get(ident).map(|rule| &rule.deps_conf)
-    }
-
     fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleBody, Box<dyn Error>> {
         self.rules
             .get(ident)
             .ok_or_else(|| format!("Unknown rule: {}", ident).into())
+    }
+
+    pub fn try_get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, Box<dyn Error>> {
+        self.try_get_rule(ident).map(|rule| &rule.deps_conf)
     }
 
     pub fn perform_rule(&self, ident: &Identifier) -> Result<(), Box<dyn Error>> {
