@@ -7,6 +7,12 @@ pub struct DepsGraph<I> {
 }
 
 impl<I: Copy + Eq + Hash> DepsGraph<I> {
+    pub fn init(roots: impl IntoIterator<Item = I>) -> Self {
+        DepsGraph {
+            dependent_nodes: roots.into_iter().map(|k| (k, HashSet::new())).collect(),
+        }
+    }
+
     pub fn new() -> Self {
         DepsGraph {
             dependent_nodes: HashMap::new(),

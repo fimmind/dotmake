@@ -35,7 +35,7 @@ impl<'a> DepsResolver<'a> {
     ) -> DepsGraph<&'a Identifier> {
         let mut visited = HashSet::new();
         let mut stack = roots.into_iter().collect::<Vec<_>>();
-        let mut deps_graph = DepsGraph::new();
+        let mut deps_graph = DepsGraph::init(stack.iter().map(|&i| i));
         while let Some(node) = stack.pop() {
             let deps_conf = get_deps_for(node);
             for dep in &deps_conf.deps {
