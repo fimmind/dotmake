@@ -71,9 +71,7 @@ SUBCOMMANDS:
     pkg        Install package(s) by a given package manager
 ```
 
-## Configuration
-
-TODO
+## TODO Configuration
 
 ## LICENCE
 
