@@ -7,9 +7,9 @@ pub struct DepsGraph<I> {
 }
 
 impl<I: Copy + Eq + Hash> DepsGraph<I> {
-    pub fn init(roots: impl IntoIterator<Item = I>) -> Self {
+    pub fn new() -> Self {
         DepsGraph {
-            dependent_nodes: roots.into_iter().map(|k| (k, HashSet::new())).collect(),
+            dependent_nodes: HashMap::new(),
         }
     }
 
@@ -22,10 +22,11 @@ impl<I: Copy + Eq + Hash> DepsGraph<I> {
 
     pub fn add_dep(&mut self, node: I, dep: I) {
         self.dependent_nodes.entry(node).or_default().insert(dep);
+        self.dependent_nodes.entry(dep).or_default();
     }
 
     pub fn find_loops(&self) -> Vec<Vec<I>> {
-        vec![] // TODO
+        vec![] // TODO: loops searching
     }
 }
 
