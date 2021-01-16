@@ -31,10 +31,10 @@ pub struct Config {
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
-    #[error("Failed to parse config: {0}")]
+    #[error(transparent)]
     ParseError(#[from] ParsingError),
 
-    #[error("Unknown rule: {0}")]
+    #[error("Undefined rule: {0}")]
     UnknownRule(Identifier),
 
     #[error("Failed to perfrom `{rule}`: {err}")]

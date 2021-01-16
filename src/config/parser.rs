@@ -6,10 +6,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ParsingError {
-    #[error(transparent)]
+    #[error("Failed to open config: {0}")]
     FailedToOpen(#[from] io::Error),
 
-    #[error(transparent)]
+    #[error("Failed to parse config: {0}")]
     FailedToParse(#[from] serde_yaml::Error),
 }
 
