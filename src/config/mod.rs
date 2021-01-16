@@ -7,9 +7,14 @@ use lazy_static::lazy_static;
 use parser::parse_config;
 use std::collections::HashMap;
 use std::error::Error;
+use std::path::PathBuf;
+use std::process;
+
+use crate::cli::OPTIONS;
 
 lazy_static! {
-    pub static ref CONFIG: Config = parse_config().unwrap_or_else(exit_error_fn!());
+    pub static ref CONFIG: Config = parse_config(&config_path().unwrap_or_else(exit_error_fn!()))
+        .unwrap_or_else(exit_error_fn!());
 }
 
 #[derive(Debug, Deserialize)]
@@ -56,4 +61,28 @@ pub struct RuleBody {
 
     #[serde(flatten)]
     actions: RuleActions,
+}
+
+fn get_default_distro_id() -> Result<String, Box<dyn Error>> {
+    Ok(String::from_utf8(
+        process::Command::new("sed")
+            .args(&["-n", "s/^ID=//p", "/etc/os-release"])
+            .output()?
+            .stdout,
+    )?
+    .trim()
+    .to_string())
+}
+
+fn get_distro_id() -> Result<String, Box<dyn Error>> {
+    match OPTIONS.distro_id() {
+        Some(id) => Ok(id.to_string()),
+        None => get_default_distro_id(),
+    }
+}
+
+fn config_path() -> Result<PathBuf, Box<dyn Error>> {
+    Ok(OPTIONS
+        .dotfiles_dir()
+        .join(format!("dotm-{}.yaml", get_distro_id()?)))
 }

@@ -1,38 +1,21 @@
 use serde::de::DeserializeOwned;
-use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
-use std::process;
+use std::io;
+use thiserror::Error;
 
-use crate::cli::OPTIONS;
+#[derive(Debug, Error)]
+pub enum ParsingError {
+    #[error("Failed to read configuration file: {0}")]
+    FailedToRead(#[from] io::Error),
 
-fn get_default_distro_id() -> Result<String, Box<dyn Error>> {
-    Ok(String::from_utf8(
-        process::Command::new("sed")
-            .args(&["-n", "s/^ID=//p", "/etc/os-release"])
-            .output()?
-            .stdout,
-    )?
-    .trim()
-    .to_string())
+    #[error("Failed to parse configuration file: {0}")]
+    FailedToParse(#[from] serde_yaml::Error),
 }
 
-fn get_distro_id() -> Result<String, Box<dyn Error>> {
-    match OPTIONS.distro_id() {
-        Some(id) => Ok(id.to_string()),
-        None => get_default_distro_id(),
-    }
-}
-
-fn config_path() -> Result<PathBuf, Box<dyn Error>> {
-    Ok(OPTIONS
-        .dotfiles_dir()
-        .join(format!("dotm-{}.yaml", get_distro_id()?)))
-}
-
-pub fn parse_config<T>() -> Result<T, Box<dyn Error>>
+pub fn parse_config<T>(path: &PathBuf) -> Result<T, ParsingError>
 where
     T: DeserializeOwned,
 {
-    Ok(serde_yaml::from_str(&fs::read_to_string(&config_path()?)?)?)
+    Ok(serde_yaml::from_str(&fs::read_to_string(path)?)?)
 }
