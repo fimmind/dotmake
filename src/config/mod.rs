@@ -13,7 +13,7 @@ use std::process;
 use crate::cli::OPTIONS;
 
 lazy_static! {
-    pub static ref CONFIG: Config = parse_config(&config_path().unwrap_or_else(exit_error_fn!()))
+    pub static ref CONFIG: Config = parse_config(&get_config_path().unwrap_or_else(exit_error_fn!()))
         .unwrap_or_else(exit_error_fn!());
 }
 
@@ -81,7 +81,7 @@ fn get_distro_id() -> Result<String, Box<dyn Error>> {
     }
 }
 
-fn config_path() -> Result<PathBuf, Box<dyn Error>> {
+fn get_config_path() -> Result<PathBuf, Box<dyn Error>> {
     Ok(OPTIONS
         .dotfiles_dir()
         .join(format!("dotm-{}.yaml", get_distro_id()?)))
