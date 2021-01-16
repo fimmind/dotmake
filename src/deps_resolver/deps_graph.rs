@@ -70,6 +70,32 @@ mod tests {
     use super::DepsGraph;
 
     #[test]
+    fn get_leafs() {
+        for i in 1..100 {
+            let mut leafs: Vec<_> = DepsGraph::init(0..i).get_leafs().collect();
+            leafs.sort();
+            assert_eq!(leafs, (0..i).collect::<Vec<_>>());
+        }
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        let leafs: Vec<_> = graph.get_leafs().collect();
+        assert_eq!(leafs, vec![1]);
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 3);
+        let leafs: Vec<_> = graph.get_leafs().collect();
+        assert_eq!(leafs, vec![1]);
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(3, 4);
+        let leafs: Vec<_> = graph.get_leafs().collect();
+        assert_eq!(leafs, vec![1, 3]);
+    }
+
+    #[test]
     fn empty() {
         assert_eq!(DepsGraph::<i32>::new().into_iter().count(), 0);
         assert_eq!(DepsGraph::<i32>::init(vec![]).into_iter().count(), 0);
