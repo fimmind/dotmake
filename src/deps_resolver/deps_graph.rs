@@ -64,3 +64,85 @@ impl<I: Copy + Eq + Hash> IntoIterator for DepsGraph<I> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::DepsGraph;
+
+    #[test]
+    fn empty() {
+        assert_eq!(DepsGraph::<i32>::new().into_iter().count(), 0);
+        assert_eq!(DepsGraph::<i32>::init(vec![]).into_iter().count(), 0);
+    }
+
+    #[test]
+    fn no_deps() {
+        for i in 1..100 {
+            let mut resolved: Vec<_> = DepsGraph::init(0..i).into_iter().collect();
+            resolved.sort();
+            assert_eq!(resolved, (0..i).collect::<Vec<_>>());
+        }
+    }
+
+    #[test]
+    fn one_dep() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        assert_eq!(resolved, vec![2, 1]);
+    }
+
+    #[test]
+    fn two_deps_linear() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 3);
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        assert_eq!(resolved, vec![3, 2, 1]);
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(0, 1);
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        assert_eq!(resolved, vec![2, 1, 0]);
+    }
+
+    #[test]
+    fn two_deps_for_one_node() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(1, 3);
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        let pos = |x| {
+            resolved
+                .iter()
+                .position(|&y| y == x)
+                .expect(&format!("{} is not presented", x))
+        };
+
+        assert!(pos(2) < pos(1));
+        assert!(pos(3) < pos(1));
+    }
+
+    #[test]
+    fn two_parallel_deps() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(3, 4);
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        let pos = |x| {
+            resolved
+                .iter()
+                .position(|&y| y == x)
+                .expect(&format!("{} is not presented", x))
+        };
+
+        assert!(pos(2) < pos(1));
+        assert!(pos(4) < pos(3));
+    }
+}
