@@ -1,8 +1,8 @@
-use structopt::StructOpt;
+use crate::identifier::Identifier;
 use std::error::Error;
+use structopt::StructOpt;
 
 use crate::config::CONFIG;
-use crate::identifier::Identifier;
 
 /// Perform specified actions for a given rule
 #[derive(Debug, StructOpt)]
@@ -18,6 +18,6 @@ pub struct Exec {
 
 impl Exec {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        CONFIG.perform_rule_actions(&self.rule, &self.actions)
+        Ok(CONFIG.perform_rule_actions(&self.rule, &self.actions)?)
     }
 }
