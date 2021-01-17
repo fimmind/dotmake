@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
+use itertools::{Itertools, Unique};
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 type DependentsSet<I> = HashSet<I>;
 pub struct DepsGraph<I> {
-    dependent_nodes: HashMap<I, DependentsSet<I>>,
+    dependcies: HashMap<I, DependentsSet<I>>,
     roots: HashSet<I>,
 }
 
@@ -12,31 +12,29 @@ impl<I: Copy + Eq + Hash> DepsGraph<I> {
     pub fn init(roots: impl IntoIterator<Item = I>) -> Self {
         let roots: HashSet<I> = roots.into_iter().collect();
         DepsGraph {
-            dependent_nodes: roots.iter().map(|&k| (k, HashSet::new())).collect(),
+            dependcies: roots.iter().map(|&k| (k, HashSet::new())).collect(),
             roots,
         }
     }
 
     pub fn new() -> Self {
         DepsGraph {
-            dependent_nodes: HashMap::new(),
+            dependcies: HashMap::new(),
             roots: HashSet::new(),
         }
     }
 
     pub fn add_node(&mut self, node: I) {
-        if !self.dependent_nodes.contains_key(&node) {
+        if !self.dependcies.contains_key(&node) {
             self.roots.insert(node);
         }
     }
 
     pub fn add_dep(&mut self, node: I, dep: I) {
-        self.roots.remove(&node);
-        if !self.dependent_nodes.contains_key(&dep) {
-            self.roots.insert(dep);
-        }
-        self.dependent_nodes.entry(dep).or_default().insert(node);
-        self.dependent_nodes.entry(node).or_default();
+        self.add_node(node);
+        self.roots.remove(&dep);
+        self.dependcies.entry(node).or_default().insert(dep);
+        self.dependcies.entry(dep).or_default();
     }
 
     pub fn find_loops(&self) -> Vec<Vec<I>> {
@@ -46,36 +44,38 @@ impl<I: Copy + Eq + Hash> DepsGraph<I> {
 
 pub struct DepsIter<I> {
     graph: HashMap<I, HashSet<I>>,
-    queue: VecDeque<I>,
-    visited: HashSet<I>,
+    stack: Vec<I>,
+    resolved: HashSet<I>,
 }
 
 impl<I: Copy + Eq + Hash> Iterator for DepsIter<I> {
     type Item = I;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.queue.pop_front().map(|next| {
-            for &dependent in &self.graph[&next] {
-                if self.visited.insert(dependent) {
-                    self.queue.push_back(dependent);
-                }
+        while let Some(next) = self.stack.pop() {
+            if self.resolved.contains(&next) {
+                return Some(next);
             }
-            next
-        })
+            self.stack.push(next);
+            self.stack.extend(&self.graph[&next]);
+            self.resolved.insert(next);
+        }
+        None
     }
 }
 
 impl<I: Copy + Eq + Hash> IntoIterator for DepsGraph<I> {
     type Item = I;
 
-    type IntoIter = DepsIter<I>;
+    type IntoIter = Unique<DepsIter<I>>;
 
     fn into_iter(self) -> Self::IntoIter {
         DepsIter {
-            queue: self.roots.iter().map(|r| *r).collect(),
-            graph: self.dependent_nodes,
-            visited: self.roots.into_iter().collect(),
+            stack: self.roots.iter().map(|r| *r).collect(),
+            graph: self.dependcies,
+            resolved: HashSet::new(),
         }
+        .unique()
     }
 }
 
@@ -96,20 +96,20 @@ mod tests {
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
         let roots: Vec<_> = graph.roots.into_iter().collect();
-        assert_eq!(roots, vec![2]);
+        assert_eq!(roots, vec![1]);
 
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
         graph.add_dep(2, 3);
         let roots: Vec<_> = graph.roots.into_iter().collect();
-        assert_eq!(roots, vec![3]);
+        assert_eq!(roots, vec![1]);
 
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
         graph.add_dep(3, 4);
         assert!(graph.roots.len() == 2);
-        assert!(graph.roots.contains(&2));
-        assert!(graph.roots.contains(&4));
+        assert!(graph.roots.contains(&1));
+        assert!(graph.roots.contains(&3));
     }
 
     #[test]

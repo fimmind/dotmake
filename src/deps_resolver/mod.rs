@@ -2,7 +2,7 @@ mod deps_graph;
 
 use crate::deserializers::identifiers_set;
 use crate::identifier::Identifier;
-use deps_graph::{DepsGraph, DepsIter};
+use deps_graph::DepsGraph;
 use std::collections::HashSet;
 use std::error::Error;
 
@@ -54,7 +54,7 @@ impl<'a> DepsResolver<'a> {
         deps_graph
     }
 
-    pub fn try_resolve(self) -> Result<DepsIter<&'a Identifier>, Box<dyn Error>> {
+    pub fn try_resolve(self) -> Result<impl Iterator<Item = &'a Identifier>, Box<dyn Error>> {
         Ok(self.deps_graph.into_iter()) // TODO: handle loops
     }
 }
