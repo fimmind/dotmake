@@ -24,6 +24,12 @@ impl<I: Copy + Eq + Hash> DepsGraph<I> {
         }
     }
 
+    pub fn add_node(&mut self, node: I) {
+        if !self.dependent_nodes.contains_key(&node) {
+            self.roots.insert(node);
+        }
+    }
+
     pub fn add_dep(&mut self, node: I, dep: I) {
         self.roots.remove(&node);
         if !self.dependent_nodes.contains_key(&dep) {
@@ -76,6 +82,8 @@ impl<I: Copy + Eq + Hash> IntoIterator for DepsGraph<I> {
 #[cfg(test)]
 mod tests {
     use super::DepsGraph;
+    use std::collections::HashMap;
+    use std::collections::HashSet;
 
     #[test]
     fn roots() {
@@ -119,70 +127,57 @@ mod tests {
         }
     }
 
+    fn test_resolving(edges: Vec<(i32, i32)>) {
+        let mut graph = DepsGraph::new();
+        let mut nodes = HashSet::new();
+        for &(node, dep) in edges.iter() {
+            graph.add_dep(node, dep);
+            nodes.insert(node);
+            nodes.insert(dep);
+        }
+
+        let resolved: Vec<_> = graph.into_iter().collect();
+        println!("Resolved: {:?}", resolved);
+        assert_eq!(
+            resolved.len(),
+            nodes.len(),
+            "{} nodes inserted, but {} resolved",
+            nodes.len(),
+            resolved.len()
+        );
+
+        let positions: HashMap<_, _> = resolved.into_iter().enumerate().map(|(i, d)| (d, i)).collect();
+        for &(node, dep) in edges.iter() {
+            assert!(
+                positions[&dep] < positions[&node],
+                "pos({0}) < pos({1}), but {0} depends on {1}",
+                node,
+                dep
+            );
+        }
+    }
+
     #[test]
     fn one_dep() {
-        let mut graph = DepsGraph::<i32>::new();
-        graph.add_dep(1, 2);
-
-        let resolved: Vec<_> = graph.into_iter().collect();
-        assert_eq!(resolved, vec![2, 1]);
+        test_resolving(vec![(1, 2)]);
+        test_resolving(vec![(2, 1)]);
     }
 
     #[test]
-    fn two_deps_linear() {
-        let mut graph = DepsGraph::<i32>::new();
-        graph.add_dep(1, 2);
-        graph.add_dep(2, 3);
-
-        let resolved: Vec<_> = graph.into_iter().collect();
-        assert_eq!(resolved, vec![3, 2, 1]);
-
-        let mut graph = DepsGraph::<i32>::new();
-        graph.add_dep(1, 2);
-        graph.add_dep(0, 1);
-
-        let resolved: Vec<_> = graph.into_iter().collect();
-        assert_eq!(resolved, vec![2, 1, 0]);
+    fn two_simple_deps() {
+        test_resolving(vec![(1, 2), (2, 3)]);
+        test_resolving(vec![(1, 2), (0, 1)]);
+        test_resolving(vec![(1, 2), (1, 3)]);
+        test_resolving(vec![(1, 2), (3, 4)]);
     }
 
     #[test]
-    fn two_deps_for_one_node() {
-        let mut graph = DepsGraph::<i32>::new();
-        graph.add_dep(1, 2);
-        graph.add_dep(1, 3);
-
-        let resolved: Vec<_> = graph.into_iter().collect();
-        let pos = |x| {
-            resolved
-                .iter()
-                .position(|&y| y == x)
-                .expect(&format!("{} is not presented", x))
-        };
-
-        println!("{:?}", resolved);
-        assert_eq!(resolved.len(), 3);
-        assert!(pos(2) < pos(1));
-        assert!(pos(3) < pos(1));
-    }
-
-    #[test]
-    fn two_parallel_deps() {
-        let mut graph = DepsGraph::<i32>::new();
-        graph.add_dep(1, 2);
-        graph.add_dep(3, 4);
-
-        let resolved: Vec<_> = graph.into_iter().collect();
-        let pos = |x| {
-            resolved
-                .iter()
-                .position(|&y| y == x)
-                .expect(&format!("{} is not presented", x))
-        };
-
-        println!("{:?}", resolved);
-        assert_eq!(resolved.len(), 4);
-        assert!(pos(2) < pos(1));
-        assert!(pos(4) < pos(3));
+    fn multiple_nodes_with_commond_dep() {
+        test_resolving(vec![(1, 3), (2, 3)]);
+        test_resolving(vec![(1, 3), (1, 2), (2, 3)]);
+        test_resolving(vec![(1, 4), (2, 4), (3, 4)]);
+        test_resolving(vec![(1, 2), (1, 3), (2, 3), (2, 4), (3, 4)]);
+        test_resolving(vec![(1, 2), (2, 3), (1, 3), (3, 4)]);
     }
 
     #[test]
