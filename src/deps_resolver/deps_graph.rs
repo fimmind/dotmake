@@ -1,34 +1,36 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::collections::VecDeque;
 
 type DependentsSet<I> = HashSet<I>;
 pub struct DepsGraph<I> {
     dependent_nodes: HashMap<I, DependentsSet<I>>,
+    roots: HashSet<I>,
 }
 
 impl<I: Copy + Eq + Hash> DepsGraph<I> {
     pub fn init(roots: impl IntoIterator<Item = I>) -> Self {
+        let roots: HashSet<I> = roots.into_iter().collect();
         DepsGraph {
-            dependent_nodes: roots.into_iter().map(|k| (k, HashSet::new())).collect(),
+            dependent_nodes: roots.iter().map(|&k| (k, HashSet::new())).collect(),
+            roots,
         }
     }
 
     pub fn new() -> Self {
         DepsGraph {
             dependent_nodes: HashMap::new(),
+            roots: HashSet::new(),
         }
     }
 
-    fn get_leafs(&self) -> impl Iterator<Item = I> + '_ {
-        self.dependent_nodes
-            .iter()
-            .filter(|(_k, v)| v.is_empty())
-            .map(|(k, _v)| *k)
-    }
-
     pub fn add_dep(&mut self, node: I, dep: I) {
-        self.dependent_nodes.entry(node).or_default().insert(dep);
-        self.dependent_nodes.entry(dep).or_default();
+        self.roots.remove(&node);
+        if !self.dependent_nodes.contains_key(&dep) {
+            self.roots.insert(dep);
+        }
+        self.dependent_nodes.entry(dep).or_default().insert(node);
+        self.dependent_nodes.entry(node).or_default();
     }
 
     pub fn find_loops(&self) -> Vec<Vec<I>> {
@@ -38,15 +40,20 @@ impl<I: Copy + Eq + Hash> DepsGraph<I> {
 
 pub struct DepsIter<I> {
     graph: HashMap<I, HashSet<I>>,
-    stack: Vec<I>,
+    queue: VecDeque<I>,
+    visited: HashSet<I>,
 }
 
 impl<I: Copy + Eq + Hash> Iterator for DepsIter<I> {
     type Item = I;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.stack.pop().map(|next| {
-            self.stack.extend(&self.graph[&next]);
+        self.queue.pop_front().map(|next| {
+            for &dependent in &self.graph[&next] {
+                if self.visited.insert(dependent) {
+                    self.queue.push_back(dependent);
+                }
+            }
             next
         })
     }
@@ -59,8 +66,9 @@ impl<I: Copy + Eq + Hash> IntoIterator for DepsGraph<I> {
 
     fn into_iter(self) -> Self::IntoIter {
         DepsIter {
-            stack: self.get_leafs().collect(),
+            queue: self.roots.iter().map(|r| *r).collect(),
             graph: self.dependent_nodes,
+            visited: self.roots.into_iter().collect(),
         }
     }
 }
@@ -70,29 +78,30 @@ mod tests {
     use super::DepsGraph;
 
     #[test]
-    fn get_leafs() {
+    fn roots() {
         for i in 1..100 {
-            let mut leafs: Vec<_> = DepsGraph::init(0..i).get_leafs().collect();
-            leafs.sort();
-            assert_eq!(leafs, (0..i).collect::<Vec<_>>());
+            let mut roots: Vec<_> = DepsGraph::init(0..i).roots.into_iter().collect();
+            roots.sort();
+            assert_eq!(roots, (0..i).collect::<Vec<_>>());
         }
 
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
-        let leafs: Vec<_> = graph.get_leafs().collect();
-        assert_eq!(leafs, vec![1]);
+        let roots: Vec<_> = graph.roots.into_iter().collect();
+        assert_eq!(roots, vec![2]);
 
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
         graph.add_dep(2, 3);
-        let leafs: Vec<_> = graph.get_leafs().collect();
-        assert_eq!(leafs, vec![1]);
+        let roots: Vec<_> = graph.roots.into_iter().collect();
+        assert_eq!(roots, vec![3]);
 
         let mut graph = DepsGraph::<i32>::new();
         graph.add_dep(1, 2);
         graph.add_dep(3, 4);
-        let leafs: Vec<_> = graph.get_leafs().collect();
-        assert_eq!(leafs, vec![1, 3]);
+        assert!(graph.roots.len() == 2);
+        assert!(graph.roots.contains(&2));
+        assert!(graph.roots.contains(&4));
     }
 
     #[test]
@@ -150,6 +159,8 @@ mod tests {
                 .expect(&format!("{} is not presented", x))
         };
 
+        println!("{:?}", resolved);
+        assert_eq!(resolved.len(), 3);
         assert!(pos(2) < pos(1));
         assert!(pos(3) < pos(1));
     }
@@ -168,6 +179,8 @@ mod tests {
                 .expect(&format!("{} is not presented", x))
         };
 
+        println!("{:?}", resolved);
+        assert_eq!(resolved.len(), 4);
         assert!(pos(2) < pos(1));
         assert!(pos(4) < pos(3));
     }
