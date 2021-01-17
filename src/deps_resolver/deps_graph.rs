@@ -1,6 +1,6 @@
+use std::collections::VecDeque;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::collections::VecDeque;
 
 type DependentsSet<I> = HashSet<I>;
 pub struct DepsGraph<I> {
@@ -183,5 +183,76 @@ mod tests {
         assert_eq!(resolved.len(), 4);
         assert!(pos(2) < pos(1));
         assert!(pos(4) < pos(3));
+    }
+
+    #[test]
+    fn find_no_loops() {
+        for i in 1..100 {
+            let graph = DepsGraph::init(0..i);
+            assert!(graph.find_loops().is_empty());
+        }
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(1, 3);
+        assert!(graph.find_loops().is_empty());
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(3, 4);
+        assert!(graph.find_loops().is_empty());
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 3);
+        assert!(graph.find_loops().is_empty());
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(0, 1);
+        assert!(graph.find_loops().is_empty());
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(1, 3);
+        graph.add_dep(2, 3);
+        assert!(graph.find_loops().is_empty());
+    }
+
+    #[test]
+    fn find_single_loop() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 1);
+        assert_eq!(graph.find_loops(), vec![vec![1, 1]]);
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 1);
+        assert_eq!(graph.find_loops(), vec![vec![1, 2, 1]]);
+
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 3);
+        graph.add_dep(3, 1);
+        graph.add_dep(1, 4);
+        graph.add_dep(1, 5);
+        assert_eq!(graph.find_loops(), vec![vec![1, 2, 3, 1]]);
+    }
+
+    #[test]
+    fn find_multiple_loops() {
+        let mut graph = DepsGraph::<i32>::new();
+        graph.add_dep(1, 2);
+        graph.add_dep(2, 1);
+        graph.add_dep(3, 3);
+        graph.add_dep(4, 5);
+        graph.add_dep(5, 4);
+
+        let loops = graph.find_loops();
+        println!("Found loops: {:?}", loops);
+        assert_eq!(loops.len(), 3);
+        assert!(loops.contains(&vec![1, 2, 1]));
+        assert!(loops.contains(&vec![3, 3]));
+        assert!(loops.contains(&vec![4, 5, 4]));
     }
 }
