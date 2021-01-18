@@ -9,10 +9,20 @@ use std::error::Error;
 #[derive(Debug, Deserialize)]
 pub struct DepsConf {
     #[serde(default, deserialize_with = "identifiers_set")]
-    pub deps: HashSet<Identifier>,
+    deps: HashSet<Identifier>,
 
     #[serde(default, deserialize_with = "identifiers_set")]
-    pub post: HashSet<Identifier>,
+    post: HashSet<Identifier>,
+}
+
+impl DepsConf {
+    pub fn deps(&self) -> impl IntoIterator<Item = &Identifier> {
+        &self.deps
+    }
+
+    pub fn post(&self) -> impl IntoIterator<Item = &Identifier> {
+        &self.post
+    }
 }
 
 pub struct DepsResolver<'a> {
@@ -38,13 +48,13 @@ impl<'a> DepsResolver<'a> {
         let mut deps_graph = DepsGraph::init(stack.iter().map(|&i| i));
         while let Some(node) = stack.pop() {
             let deps_conf = get_deps_for(node);
-            for dep in &deps_conf.deps {
+            for dep in deps_conf.deps() {
                 deps_graph.add_dep(node, dep);
                 if visited.insert(dep) {
                     stack.push(dep);
                 }
             }
-            for post in &deps_conf.post {
+            for post in deps_conf.post() {
                 deps_graph.add_dep(post, node);
                 if visited.insert(post) {
                     stack.push(post)
