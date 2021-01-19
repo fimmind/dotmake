@@ -23,10 +23,6 @@ impl DepsConf {
     pub fn post_deps(&self) -> impl IntoIterator<Item = &Identifier> {
         &self.post_deps
     }
-
-    pub fn add_dep(&mut self, dep: ) {
-
-    }
 }
 
 pub struct DepsResolver<'a> {
