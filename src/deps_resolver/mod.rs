@@ -11,8 +11,8 @@ pub struct DepsConf {
     #[serde(default, deserialize_with = "identifiers_set")]
     deps: HashSet<Identifier>,
 
-    #[serde(default, deserialize_with = "identifiers_set")]
-    post: HashSet<Identifier>,
+    #[serde(default, rename = "post", deserialize_with = "identifiers_set")]
+    post_deps: HashSet<Identifier>,
 }
 
 impl DepsConf {
@@ -20,8 +20,12 @@ impl DepsConf {
         &self.deps
     }
 
-    pub fn post(&self) -> impl IntoIterator<Item = &Identifier> {
-        &self.post
+    pub fn post_deps(&self) -> impl IntoIterator<Item = &Identifier> {
+        &self.post_deps
+    }
+
+    pub fn add_dep(&mut self, dep: ) {
+
     }
 }
 
@@ -54,7 +58,7 @@ impl<'a> DepsResolver<'a> {
                     stack.push(dep);
                 }
             }
-            for post in deps_conf.post() {
+            for post in deps_conf.post_deps() {
                 deps_graph.add_dep(post, node);
                 if visited.insert(post) {
                     stack.push(post)
