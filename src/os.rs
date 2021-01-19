@@ -11,9 +11,6 @@ pub enum OSError {
         err: io::Error,
         msg: String,
     },
-
-    #[error("`/etc/os-release` does not contain ID field")]
-    DistroIdNotSpecified,
 }
 
 pub fn open_file(name: impl AsRef<Path>) -> Result<File, OSError> {
@@ -43,7 +40,7 @@ pub fn get_distro_id() -> Result<String, OSError> {
             return Ok(line[3..].to_string());
         }
     }
-    Err(OSError::DistroIdNotSpecified)
+    Ok("linux".to_string())
 }
 
 #[cfg(test)]
