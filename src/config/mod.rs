@@ -1,17 +1,14 @@
-mod parser;
-
 use crate::actions::{ActionsConf, RuleActions};
 use crate::deps_resolver::DepsConf;
 use crate::identifier::Identifier;
 use lazy_static::lazy_static;
-use parser::{parse_config, ParsingError};
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 use thiserror::Error;
 
 use crate::cli::OPTIONS;
-use crate::os::OSError;
+use crate::os::{self, OSError};
 
 lazy_static! {
     pub static ref CONFIG: Config = Config::init().unwrap_or_else(exit_error_fn!());
@@ -28,8 +25,8 @@ pub struct Config {
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
-    #[error(transparent)]
-    ParseError(#[from] ParsingError),
+    #[error("Failed to parse config: {0}")]
+    ParsingError(#[from] serde_yaml::Error),
 
     #[error("Undefined rule: {0}")]
     UnknownRule(Identifier),
@@ -47,7 +44,11 @@ pub enum ConfigError {
 
 impl Config {
     pub fn init() -> Result<Self, ConfigError> {
-        Ok(parse_config(&Self::get_config_path()?)?)
+        Ok(Self::parse(&Self::get_config_path()?)?)
+    }
+
+    fn parse(path: &PathBuf) -> Result<Self, ConfigError> {
+        Ok(serde_yaml::from_reader(os::open_file(path)?)?)
     }
 
     fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleBody, ConfigError> {
