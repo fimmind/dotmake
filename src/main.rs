@@ -13,6 +13,7 @@ mod deps_resolver;
 mod actions;
 mod deserializers;
 mod identifier;
+mod os;
 
 fn main() {
     cli::SUBCOMMAND.perform().unwrap_or_else(exit_error_fn!())

@@ -7,17 +7,14 @@ use lazy_static::lazy_static;
 use parser::{parse_config, ParsingError};
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
 use std::path::PathBuf;
 use thiserror::Error;
 
 use crate::cli::OPTIONS;
+use crate::os::OSError;
 
 lazy_static! {
-    pub static ref CONFIG: Config =
-        parse_config(&get_config_path().unwrap_or_else(exit_error_fn!()))
-            .unwrap_or_else(exit_error_fn!());
+    pub static ref CONFIG: Config = Config::init().unwrap_or_else(exit_error_fn!());
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,18 +41,15 @@ pub enum ConfigError {
         rule: Identifier,
     },
 
-    #[error("Failed to read `{file}`: {err}")]
-    FailedToRead {
-        #[source]
-        err: io::Error,
-        file: PathBuf,
-    },
-
-    #[error("`/etc/os-release` does not contain ID field")]
-    DistroIdNotSpecified,
+    #[error(transparent)]
+    OSError(#[from] OSError),
 }
 
 impl Config {
+    pub fn init() -> Result<Self, ConfigError> {
+        Ok(parse_config(&Self::get_config_path()?)?)
+    }
+
     fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleBody, ConfigError> {
         self.rules
             .get(ident)
@@ -89,6 +83,12 @@ impl Config {
                 err,
             })
     }
+
+    fn get_config_path() -> Result<PathBuf, ConfigError> {
+        Ok(OPTIONS
+            .dotfiles_dir()
+            .join(format!("dotm-{}.yaml", OPTIONS.distro_id()?)))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,34 +98,4 @@ pub struct RuleBody {
 
     #[serde(flatten)]
     actions: RuleActions,
-}
-
-fn get_config_path() -> Result<PathBuf, ConfigError> {
-    Ok(OPTIONS
-        .dotfiles_dir()
-        .join(format!("dotm-{}.yaml", get_distro_id()?)))
-}
-
-fn get_distro_id() -> Result<String, ConfigError> {
-    match OPTIONS.distro_id() {
-        Some(id) => Ok(id.to_string()),
-        None => get_default_distro_id(),
-    }
-}
-
-fn get_default_distro_id() -> Result<String, ConfigError> {
-    let os_release = "/etc/os-release";
-    let failed_to_read = |err| ConfigError::FailedToRead {
-        file: os_release.into(),
-        err,
-    };
-
-    let reader = BufReader::new(File::open(os_release).map_err(failed_to_read)?);
-    for line in reader.lines() {
-        let line = line.map_err(failed_to_read)?;
-        if line.starts_with("ID=") {
-            return Ok(line[3..].to_string());
-        }
-    }
-    Err(ConfigError::DistroIdNotSpecified)
 }

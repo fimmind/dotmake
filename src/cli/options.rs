@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
+use crate::os::{self, OSError};
 
 #[derive(Debug, StructOpt)]
 pub struct Options {
@@ -28,11 +29,15 @@ impl Options {
         &self.dotfiles_dir
     }
 
-    pub fn distro_id(&self) -> Option<&str> {
-        self.distro_id.as_ref().map(|s| s.as_str())
-    }
-
     pub fn noconfirm(&self) -> bool {
         self.noconfirm
     }
+
+    pub fn distro_id(&self) -> Result<String, OSError> {
+        match &self.distro_id {
+            Some(id) => Ok(id.to_string()),
+            None => os::get_distro_id(),
+        }
+    }
+
 }
