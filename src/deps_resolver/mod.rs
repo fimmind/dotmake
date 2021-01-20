@@ -16,12 +16,61 @@ pub struct DepsConf {
 }
 
 impl DepsConf {
-    pub fn deps(&self) -> impl IntoIterator<Item = &Identifier> {
-        &self.deps
+    pub fn new() -> Self {
+        DepsConf {
+            deps: HashSet::new(),
+            post_deps: HashSet::new(),
+        }
     }
 
-    pub fn post_deps(&self) -> impl IntoIterator<Item = &Identifier> {
-        &self.post_deps
+    pub fn deps(&self) -> impl Iterator<Item = &Identifier> {
+        self.deps.iter()
+    }
+
+    pub fn post_deps(&self) -> impl Iterator<Item = &Identifier> {
+        self.post_deps.iter()
+    }
+
+    pub fn add_deps<I>(&mut self, deps: I)
+    where
+        I: IntoIterator<Item = Identifier>
+    {
+        self.deps.extend(deps)
+    }
+
+    pub fn add_post_deps<I>(&mut self, post_deps: I)
+    where
+        I: IntoIterator<Item = Identifier>
+    {
+        self.post_deps.extend(post_deps)
+    }
+
+    pub fn merge(&mut self, other: Self) {
+        self.add_deps(other.deps);
+        self.add_post_deps(other.post_deps);
+    }
+
+    pub fn remove_deps<'a, I>(&mut self, deps: I)
+    where
+        I: IntoIterator<Item = &'a Identifier>
+    {
+        for dep in deps {
+            self.deps.remove(dep);
+        }
+    }
+
+    pub fn remove_post_deps<'a, I>(&mut self, post_deps: I)
+    where
+        I: IntoIterator<Item = &'a Identifier>
+    {
+        for post_dep in post_deps {
+            self.post_deps.remove(post_dep);
+        }
+    }
+
+    pub fn disjoin(&mut self, other: &Self) {
+        self.remove_deps(&other.deps);
+        self.remove_post_deps(&other.post_deps);
     }
 }
 
