@@ -1,9 +1,7 @@
 use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
-
 use crate::config::CONFIG;
-
 use crate::deps_resolver::DepsResolver;
 
 /// Perform installation of given rules

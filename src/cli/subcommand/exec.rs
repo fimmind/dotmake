@@ -1,8 +1,7 @@
+use crate::config::CONFIG;
 use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
-
-use crate::config::CONFIG;
 
 /// Perform specified actions for a given rule
 #[derive(Debug, StructOpt)]

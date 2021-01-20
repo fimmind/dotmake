@@ -1,14 +1,13 @@
 use crate::actions::{ActionsConf, RuleActions};
+use crate::cli::OPTIONS;
 use crate::deps_resolver::DepsConf;
 use crate::identifier::Identifier;
+use crate::os::{self, OSError};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 use thiserror::Error;
-
-use crate::cli::OPTIONS;
-use crate::os::{self, OSError};
 
 lazy_static! {
     pub static ref CONFIG: Config = Config::init().unwrap_or_else(exit_error_fn!());
