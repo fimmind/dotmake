@@ -1,9 +1,12 @@
-use crate::actions::{ActionsConf, RuleActions};
+pub mod deserializers;
+pub mod rule_actions;
+
 use crate::cli::OPTIONS;
 use crate::deps_resolver::DepsConf;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use lazy_static::lazy_static;
+use rule_actions::{RuleActionsConf, RuleActions};
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
@@ -16,7 +19,7 @@ lazy_static! {
 #[derive(Debug, Deserialize)]
 pub struct Config {
     #[serde(flatten)]
-    actions_conf: ActionsConf,
+    actions_conf: RuleActionsConf,
 
     #[serde(default)]
     rules: HashMap<Identifier, RuleActions>,
@@ -50,18 +53,18 @@ impl Config {
         Ok(serde_yaml::from_reader(os::open_file(path)?)?)
     }
 
-    fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleActions, ConfigError> {
+    fn get_rule_actions(&self, ident: &Identifier) -> Result<&RuleActions, ConfigError> {
         self.rules
             .get(ident)
             .ok_or_else(|| ConfigError::UnknownRule(ident.clone()))
     }
 
-    pub fn try_get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, ConfigError> {
-        Ok(self.try_get_rule(ident)?.get_deps_conf())
+    pub fn get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, ConfigError> {
+        Ok(self.get_rule_actions(ident)?.get_deps_conf())
     }
 
     pub fn perform_rule(&self, ident: &Identifier) -> Result<(), ConfigError> {
-        self.try_get_rule(ident)?
+        self.get_rule_actions(ident)?
             .perform_all(&self.actions_conf)
             .map_err(|err| ConfigError::FailedToPerform {
                 rule: ident.clone(),
@@ -74,7 +77,7 @@ impl Config {
         ident: &Identifier,
         actions_list: &[Identifier],
     ) -> Result<(), ConfigError> {
-        self.try_get_rule(ident)?
+        self.get_rule_actions(ident)?
             .perform(actions_list, &self.actions_conf)
             .map_err(|err| ConfigError::FailedToPerform {
                 rule: ident.clone(),

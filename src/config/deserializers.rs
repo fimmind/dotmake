@@ -22,7 +22,7 @@ impl<T> ListEnum<T> {
 /// Deserialize a vector, but instead of only accepting a sequence of items, it
 /// also accepts a single value, witch is treated as a singletone sequence
 /// containing this value
-pub fn list<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+pub fn deserialize_list<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
@@ -31,7 +31,7 @@ where
 }
 
 /// Deserialize a whitespace-separated list of `Identifier`s
-pub fn identifiers_list<'de, D>(deserializer: D) -> Result<Vec<Identifier>, D::Error>
+pub fn deserialize_identifiers_list<'de, D>(deserializer: D) -> Result<Vec<Identifier>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -42,7 +42,7 @@ where
 }
 
 /// Deserialize a whitespace-separated set of `Identifier`s containing no duplicates
-pub fn identifiers_set<'de, D>(deserializer: D) -> Result<HashSet<Identifier>, D::Error>
+pub fn deserialize_identifiers_set<'de, D>(deserializer: D) -> Result<HashSet<Identifier>, D::Error>
 where
     D: Deserializer<'de>,
 {

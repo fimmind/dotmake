@@ -10,8 +10,6 @@ mod io;
 mod cli;
 mod config;
 mod deps_resolver;
-mod actions;
-mod deserializers;
 mod identifier;
 mod os;
 
