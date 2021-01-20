@@ -19,7 +19,7 @@ pub struct Config {
     actions_conf: ActionsConf,
 
     #[serde(default)]
-    rules: HashMap<Identifier, RuleBody>,
+    rules: HashMap<Identifier, RuleActions>,
 }
 
 #[derive(Debug, Error)]
@@ -50,19 +50,18 @@ impl Config {
         Ok(serde_yaml::from_reader(os::open_file(path)?)?)
     }
 
-    fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleBody, ConfigError> {
+    fn try_get_rule(&self, ident: &Identifier) -> Result<&RuleActions, ConfigError> {
         self.rules
             .get(ident)
             .ok_or_else(|| ConfigError::UnknownRule(ident.clone()))
     }
 
     pub fn try_get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, ConfigError> {
-        self.try_get_rule(ident).map(|rule| &rule.deps_conf)
+        Ok(self.try_get_rule(ident)?.get_deps_conf())
     }
 
     pub fn perform_rule(&self, ident: &Identifier) -> Result<(), ConfigError> {
         self.try_get_rule(ident)?
-            .actions
             .perform_all(&self.actions_conf)
             .map_err(|err| ConfigError::FailedToPerform {
                 rule: ident.clone(),
@@ -76,7 +75,6 @@ impl Config {
         actions_list: &[Identifier],
     ) -> Result<(), ConfigError> {
         self.try_get_rule(ident)?
-            .actions
             .perform(actions_list, &self.actions_conf)
             .map_err(|err| ConfigError::FailedToPerform {
                 rule: ident.clone(),
@@ -89,13 +87,4 @@ impl Config {
             .dotfiles_dir()
             .join(format!("dotm-{}.yaml", OPTIONS.distro_id()?)))
     }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct RuleBody {
-    #[serde(flatten)]
-    deps_conf: DepsConf,
-
-    #[serde(flatten)]
-    actions: RuleActions,
 }

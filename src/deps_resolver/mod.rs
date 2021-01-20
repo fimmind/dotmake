@@ -1,17 +1,13 @@
 mod deps_graph;
 
-use crate::deserializers::identifiers_set;
 use crate::identifier::Identifier;
 use deps_graph::DepsGraph;
 use std::collections::HashSet;
 use std::error::Error;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct DepsConf {
-    #[serde(default, deserialize_with = "identifiers_set")]
     deps: HashSet<Identifier>,
-
-    #[serde(default, rename = "post", deserialize_with = "identifiers_set")]
     post_deps: HashSet<Identifier>,
 }
 
