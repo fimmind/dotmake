@@ -1,4 +1,4 @@
-pub mod deserializers;
+mod deserializers;
 pub mod rule_actions;
 
 use crate::cli::OPTIONS;
@@ -6,9 +6,8 @@ use crate::deps_resolver::DepsConf;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use lazy_static::lazy_static;
-use rule_actions::{RuleActionsConf, RuleActions};
+use rule_actions::{RuleActions, RuleActionsConf, RuleActionsError};
 use std::collections::HashMap;
-use std::error::Error;
 use std::path::PathBuf;
 use thiserror::Error;
 
@@ -33,61 +32,79 @@ pub enum ConfigError {
     #[error("Undefined rule: {0}")]
     UnknownRule(Identifier),
 
-    #[error("Failed to perfrom `{rule}`: {err}")]
-    FailedToPerform {
-        #[source]
-        err: Box<dyn Error>,
-        rule: Identifier,
-    },
-
     #[error(transparent)]
     OSError(#[from] OSError),
 }
 
 impl Config {
     pub fn init() -> Result<Self, ConfigError> {
-        Ok(Self::parse(&Self::get_config_path()?)?)
+        Ok(Self::parse_from(&Self::path()?)?)
     }
 
-    fn parse(path: &PathBuf) -> Result<Self, ConfigError> {
+    fn parse_from(path: &PathBuf) -> Result<Self, ConfigError> {
         Ok(serde_yaml::from_reader(os::open_file(path)?)?)
     }
 
-    fn get_rule_actions(&self, ident: &Identifier) -> Result<&RuleActions, ConfigError> {
-        self.rules
-            .get(ident)
-            .ok_or_else(|| ConfigError::UnknownRule(ident.clone()))
-    }
-
-    pub fn get_rule_deps_conf(&self, ident: &Identifier) -> Result<&DepsConf, ConfigError> {
-        Ok(self.get_rule_actions(ident)?.get_deps_conf())
-    }
-
-    pub fn perform_rule(&self, ident: &Identifier) -> Result<(), ConfigError> {
-        self.get_rule_actions(ident)?
-            .perform_all(&self.actions_conf)
-            .map_err(|err| ConfigError::FailedToPerform {
-                rule: ident.clone(),
-                err,
-            })
-    }
-
-    pub fn perform_rule_actions(
-        &self,
-        ident: &Identifier,
-        actions_list: &[Identifier],
-    ) -> Result<(), ConfigError> {
-        self.get_rule_actions(ident)?
-            .perform(actions_list, &self.actions_conf)
-            .map_err(|err| ConfigError::FailedToPerform {
-                rule: ident.clone(),
-                err,
-            })
-    }
-
-    fn get_config_path() -> Result<PathBuf, ConfigError> {
+    fn path() -> Result<PathBuf, ConfigError> {
         Ok(OPTIONS
             .dotfiles_dir()
             .join(format!("dotm-{}.yaml", OPTIONS.distro_id()?)))
+    }
+
+    pub fn get_rule<'a>(&'a self, ident: &'a Identifier) -> Result<Rule<'a>, ConfigError> {
+        Ok(Rule {
+            actions: self
+                .rules
+                .get(&ident)
+                .ok_or_else(|| ConfigError::UnknownRule(ident.clone()))?,
+            actions_conf: &self.actions_conf,
+            ident,
+        })
+    }
+}
+
+pub struct Rule<'a> {
+    actions: &'a RuleActions,
+    actions_conf: &'a RuleActionsConf,
+    ident: &'a Identifier,
+}
+
+#[derive(Debug, Error)]
+pub enum RuleError {
+    #[error("Failed to perfrom `{rule}`: {err}")]
+    FailedToPerform {
+        #[source]
+        err: RuleActionsError,
+        rule: Identifier,
+    },
+}
+
+impl<'a> Rule<'a> {
+    pub fn ident(&self) -> &Identifier {
+        self.ident
+    }
+
+    pub fn deps_conf(&self) -> &'a DepsConf {
+        self.actions.get_deps_conf()
+    }
+
+    pub fn partial_perform(self, actions_list: &[Identifier]) -> Result<(), RuleError> {
+        Ok(self
+            .actions
+            .perform(actions_list, self.actions_conf)
+            .map_err(|err| RuleError::FailedToPerform {
+                rule: self.ident.clone(),
+                err,
+            })?)
+    }
+
+    pub fn perform(self) -> Result<(), RuleError> {
+        Ok(self
+            .actions
+            .perform_all(self.actions_conf)
+            .map_err(|err| RuleError::FailedToPerform {
+                rule: self.ident.clone(),
+                err,
+            })?)
     }
 }
