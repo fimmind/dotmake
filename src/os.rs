@@ -51,7 +51,7 @@ pub fn get_distro_id() -> Result<String, OSError> {
     Ok("linux".to_string())
 }
 
-pub fn run_shell_script(shell: &str, dir: &PathBuf, script: &str) -> Result<(), OSError> {
+pub fn run_shell_script(shell: &str, dir: impl AsRef<Path>, script: &str) -> Result<(), OSError> {
     let shell_err = |err| OSError::IO {
         msg: "Shell error".to_string(),
         err,

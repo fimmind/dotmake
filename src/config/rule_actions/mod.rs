@@ -4,7 +4,7 @@ use crate::deps_resolver::DepsConf;
 use std::error::Error;
 use thiserror::Error;
 
-use shell_script::ShellScript;
+use shell_script::{ShellScript, TempDirShellScript};
 
 #[derive(Debug, Error)]
 pub enum RuleActionsError {
@@ -21,7 +21,6 @@ pub struct RuleActionsConf {
 }
 
 type Pkgs = (); // TODO
-type InTemp = (); // TODO
 type Links = (); // TODO
 type Deps = (); // TODO
 type PostDeps = (); // TODO
@@ -32,8 +31,11 @@ enum Actions {
     /// Install packages using preconfigured package managers
     Pkgs(Pkgs),
 
-    /// Run shell script in Dotfiles direcorty
+    /// Run shell script in the Dotfiles direcorty
     Shell(ShellScript),
+
+    /// Run shell script in a temporal directory
+    InTemp(TempDirShellScript),
 
     /// Create links for given files
     Links(Links),
@@ -66,7 +68,7 @@ macro_rules! match_dyn_action {
 impl Actions {
     fn as_dyn_action(&self) -> Box<&dyn Action> {
         use Actions::*;
-        match_dyn_action!(self; Pkgs, Shell, Links, Deps, Post)
+        match_dyn_action!(self; Pkgs, Shell, InTemp, Links, Deps, Post)
     }
 
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
