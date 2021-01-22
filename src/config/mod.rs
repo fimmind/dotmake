@@ -88,20 +88,20 @@ impl<'a> Rule<'a> {
         self.actions.get_deps_conf()
     }
 
-    pub fn partial_perform(self, actions_list: &[Identifier]) -> Result<(), RuleError> {
+    pub fn perform_nth(&self, n: usize) -> Result<(), RuleError> {
         Ok(self
             .actions
-            .perform(actions_list, self.actions_conf)
+            .peform_nth(n, self.actions_conf)
             .map_err(|err| RuleError::FailedToPerform {
                 rule: self.ident.clone(),
                 err,
             })?)
     }
 
-    pub fn perform(self) -> Result<(), RuleError> {
+    pub fn perform(&self) -> Result<(), RuleError> {
         Ok(self
             .actions
-            .perform_all(self.actions_conf)
+            .perform(self.actions_conf)
             .map_err(|err| RuleError::FailedToPerform {
                 rule: self.ident.clone(),
                 err,

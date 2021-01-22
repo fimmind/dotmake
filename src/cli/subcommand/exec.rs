@@ -3,20 +3,20 @@ use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
 
-/// Perform specified actions for a given rule
+/// Perform nth action of a given rule
 #[derive(Debug, StructOpt)]
 pub struct Exec {
     /// A given rule
     #[structopt(required = true)]
     rule: Identifier,
 
-    /// Actions to perform
+    /// Index of an action to perform (counting from 1)
     #[structopt(required = true)]
-    actions: Vec<Identifier>,
+    n: usize,
 }
 
 impl Exec {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        Ok(CONFIG.get_rule(&self.rule)?.partial_perform(&self.actions)?)
+        Ok(CONFIG.get_rule(&self.rule)?.perform_nth(self.n)?)
     }
 }
