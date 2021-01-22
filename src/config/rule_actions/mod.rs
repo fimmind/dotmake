@@ -1,6 +1,10 @@
+mod shell_script;
+
 use crate::deps_resolver::DepsConf;
 use std::error::Error;
 use thiserror::Error;
+
+use shell_script::ShellScript;
 
 #[derive(Debug, Error)]
 pub enum RuleActionsError {
@@ -12,10 +16,11 @@ pub enum RuleActionsError {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RuleActionsConf {}
+pub struct RuleActionsConf {
+    shell: String,
+}
 
 type Pkgs = (); // TODO
-type ShellScript = (); // TODO
 type InTemp = (); // TODO
 type Links = (); // TODO
 type Deps = (); // TODO
