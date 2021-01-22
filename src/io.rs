@@ -16,7 +16,6 @@ macro_rules! print_msg {
 macro_rules! exit_error {
     ($($fmt_args:expr),+) => {{
         print_error!($($fmt_args),+);
-        print_info!("exiting due to previous error");
         std::process::exit(1)
     }};
 }
