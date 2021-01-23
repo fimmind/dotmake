@@ -49,6 +49,9 @@ enum Actions {
 
 pub trait Action {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
+    fn get_deps_conf(&self) -> DepsConf {
+        DepsConf::new()
+    }
 }
 
 impl Action for () {
@@ -77,17 +80,25 @@ impl Actions {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         self.as_dyn_action().perform(conf)
     }
+
+    fn get_deps_conf(&self) -> DepsConf {
+        self.as_dyn_action().get_deps_conf()
+    }
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(from = "Vec<Actions>")]
 pub struct RuleActions {
     actions: Vec<Actions>,
+    deps_conf: DepsConf,
 }
 
 impl From<Vec<Actions>> for RuleActions {
     fn from(actions: Vec<Actions>) -> Self {
-        RuleActions { actions }
+        RuleActions {
+            deps_conf: Self::get_deps_conf(&actions),
+            actions,
+        }
     }
 }
 
@@ -110,7 +121,15 @@ impl RuleActions {
         Ok(())
     }
 
-    pub fn get_deps_conf(&self) -> &DepsConf {
-        todo!("Rule actions deps conf")
+    pub fn deps_conf(&self) -> &DepsConf {
+        &self.deps_conf
+    }
+
+    fn get_deps_conf(actions: &[Actions]) -> DepsConf {
+        let mut deps_conf = DepsConf::new();
+        for action in actions {
+            deps_conf.merge(action.get_deps_conf())
+        }
+        deps_conf
     }
 }

@@ -85,7 +85,7 @@ impl<'a> Rule<'a> {
     }
 
     pub fn deps_conf(&self) -> &'a DepsConf {
-        self.actions.get_deps_conf()
+        self.actions.deps_conf()
     }
 
     pub fn perform_nth(&self, n: usize) -> Result<(), RuleError> {
