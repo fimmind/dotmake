@@ -100,11 +100,11 @@ impl RuleActions {
         if n == 0 {
             return Err(RuleActionsError::IndexOutOfRange);
         }
-        Ok(self
-            .actions
+        self.actions
             .get(n - 1)
             .ok_or(RuleActionsError::IndexOutOfRange)?
-            .perform(conf)?)
+            .perform(conf)?;
+        Ok(())
     }
 
     pub fn get_deps_conf(&self) -> &DepsConf {
