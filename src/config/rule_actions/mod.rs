@@ -58,17 +58,20 @@ impl Action for () {
 }
 
 macro_rules! match_dyn_action {
+    ($self: expr) => {
+        match_dyn_action!($self; Pkgs, Shell, InTemp, Links, Deps, Post)
+    };
+
     ($self: expr; $($action: ident),*) => {
         match $self {
-            $($action(ref a) => Box::new(a as &dyn Action),)*
+            $(Actions::$action(ref a) => a as &dyn Action,)*
         }
-    }
+    };
 }
 
 impl Actions {
-    fn as_dyn_action(&self) -> Box<&dyn Action> {
-        use Actions::*;
-        match_dyn_action!(self; Pkgs, Shell, InTemp, Links, Deps, Post)
+    fn as_dyn_action(&self) -> &dyn Action {
+        match_dyn_action!(self)
     }
 
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
