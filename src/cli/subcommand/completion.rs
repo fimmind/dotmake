@@ -1,4 +1,6 @@
+use crate::cli::Cli;
 use std::env;
+use std::error::Error;
 use std::io;
 use structopt::clap::Shell;
 use structopt::StructOpt;
@@ -11,11 +13,7 @@ pub struct Completion {
 }
 
 impl Completion {
-    pub fn perform(&self) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(crate::cli::Cli::clap().gen_completions_to(
-            env!("CARGO_BIN_NAME"),
-            self.shell,
-            &mut io::stdout(),
-        ))
+    pub fn perform(&self) -> Result<(), Box<dyn Error>> {
+        Ok(Cli::clap().gen_completions_to(env!("CARGO_BIN_NAME"), self.shell, &mut io::stdout()))
     }
 }
