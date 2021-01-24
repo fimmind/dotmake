@@ -1,12 +1,15 @@
 mod shell_script;
 mod deps;
+mod links;
 
 use crate::deps_resolver::DepsConf;
 use std::error::Error;
+use std::path::PathBuf;
 use thiserror::Error;
 
 use shell_script::{ShellScript, TempDirShellScript};
 use deps::{Deps, PostDeps};
+use links::Links;
 
 #[derive(Debug, Error)]
 pub enum RuleActionsError {
@@ -20,10 +23,10 @@ pub enum RuleActionsError {
 #[derive(Debug, Deserialize)]
 pub struct RuleActionsConf {
     shell: String,
+    backup_dir: PathBuf,
 }
 
 type Pkgs = (); // TODO
-type Links = (); // TODO
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]

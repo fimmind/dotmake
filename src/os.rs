@@ -1,5 +1,7 @@
-use std::fs::File;
+use std::ffi::OsStr;
+use std::fs::{self, File};
 use std::io::{self, prelude::*, BufReader};
+use std::os::unix::fs::symlink as unix_symlink;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use thiserror::Error;
@@ -19,6 +21,60 @@ pub enum OSError {
              .unwrap_or("error".to_string())
     )]
     ExitError { code: Option<i32> },
+
+    #[error("Failed to obtain file name of `{0}`")]
+    NoFileName(PathBuf),
+}
+
+pub fn get_file_name(file: &Path) -> Result<&OsStr, OSError> {
+    file.file_name().ok_or(OSError::NoFileName(file.to_owned()))
+}
+
+pub fn ensure_dir_exists(path: &Path) -> Result<(), OSError> {
+    if !path.exists() {
+        fs::create_dir_all(path).map_err(|err| OSError::IO {
+            msg: format!("Failed to create `{}`", path.display()),
+            err,
+        })?;
+    }
+    Ok(())
+}
+
+pub fn is_symlink(file: &Path) -> Result<bool, OSError> {
+    let metadata = fs::symlink_metadata(file).map_err(|err| OSError::IO {
+        msg: format!("Failed to optain metadata for `{}`", file.display()),
+        err,
+    })?;
+    Ok(metadata.file_type().is_symlink())
+}
+
+pub fn move_file(source: &Path, dest: &Path) -> Result<(), OSError> {
+    fs::rename(source, dest).map_err(|err| OSError::IO {
+        msg: format!(
+            "Failed to move `{}` to `{}`",
+            source.display(),
+            dest.display(),
+        ),
+        err,
+    })
+}
+
+pub fn remove_file(file: &Path) -> Result<(), OSError> {
+    fs::remove_file(file).map_err(|err| OSError::IO {
+        msg: format!("Failed to remove `{}`", file.display()),
+        err
+    })
+}
+
+pub fn symlink(source: &Path, dest: &Path) -> Result<(), OSError> {
+    unix_symlink(source, dest).map_err(|err| OSError::IO {
+        msg: format!(
+            "Failed to crate symlink `{}` -> `{}`",
+            source.display(),
+            dest.display()
+        ),
+        err,
+    })
 }
 
 pub fn open_file(name: impl AsRef<Path>) -> Result<File, OSError> {
