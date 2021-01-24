@@ -23,10 +23,11 @@ impl Display for MessageType {
     }
 }
 
-pub fn print_msg(msg: &str, msg_type: MessageType) {
+pub fn print_msg(msg: impl Into<String>, msg_type: MessageType) {
     eprint!("{}", msg_type);
 
-    let msg = textwrap::fill(msg, 80);
+    let mut msg = msg.into();
+    textwrap::fill_inplace(&mut msg, 80);
     if msg.lines().take(2).count() > 1 {
         eprint!("\n{}", textwrap::indent(&msg, "  "));
     } else {
@@ -56,7 +57,7 @@ macro_rules! exit_error_fn {
 macro_rules! print_error {
     ($($fmt_args:expr),+) => {{
         use $crate::io::*;
-        print_msg(&format!($($fmt_args),+), MessageType::Error);
+        print_msg(format!($($fmt_args),+), MessageType::Error);
     }};
 }
 
@@ -64,7 +65,7 @@ macro_rules! print_error {
 macro_rules! print_warn {
     ($($fmt_args:expr),+) => {{
         use $crate::io::*;
-        print_msg(&format!($($fmt_args),+, MessageType::Warning));
+        print_msg(format!($($fmt_args),+, MessageType::Warning));
     }};
 }
 
@@ -72,7 +73,7 @@ macro_rules! print_warn {
 macro_rules! print_info {
     ($($fmt_args:expr),+) => {{
         use $crate::io::*;
-        print_msg(&format!($($fmt_args),+), MessageType::Info);
+        print_msg(format!($($fmt_args),+), MessageType::Info);
     }};
 }
 
