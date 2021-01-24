@@ -48,9 +48,20 @@ dependencies = [
  "atty",
  "bitflags",
  "strsim",
- "textwrap",
+ "textwrap 0.11.0",
  "unicode-width",
  "vec_map",
+]
+
+[[package]]
+name = "colored"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3616f750b84d8f0de8a58bda93e08e2a81ad3f523089b05f1dffecab48c6cbd"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi",
 ]
 
 [[package]]
@@ -85,6 +96,7 @@ dependencies = [
 name = "dotmake"
 version = "0.1.0"
 dependencies = [
+ "colored",
  "dialoguer",
  "itertools",
  "lazy_static",
@@ -93,6 +105,7 @@ dependencies = [
  "serde_yaml",
  "structopt",
  "tempdir",
+ "textwrap 0.13.2",
  "thiserror",
 ]
 
@@ -362,6 +375,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "smawk"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1bc737c97d093feb72e67f4926d9b22d717ce8580cd25f0ce86d74e859c466d"
+
+[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -451,6 +470,16 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
+ "unicode-width",
+]
+
+[[package]]
+name = "textwrap"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cdcf6b66102d38821c33eea2bf1e8b7bd738072171cbf8a0683fbb46fcb8b0b"
+dependencies = [
+ "smawk",
  "unicode-width",
 ]
 
