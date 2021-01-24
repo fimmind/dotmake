@@ -26,11 +26,13 @@ pub enum OSError {
     NoFileName(PathBuf),
 }
 
-pub fn get_file_name(file: &Path) -> Result<&OsStr, OSError> {
+pub fn get_file_name(file: &impl AsRef<Path>) -> Result<&OsStr, OSError> {
+    let file = file.as_ref();
     file.file_name().ok_or(OSError::NoFileName(file.to_owned()))
 }
 
-pub fn ensure_dir_exists(path: &Path) -> Result<(), OSError> {
+pub fn ensure_dir_exists(path: impl AsRef<Path>) -> Result<(), OSError> {
+    let path = path.as_ref();
     if !path.exists() {
         fs::create_dir_all(path).map_err(|err| OSError::IO {
             msg: format!("Failed to create `{}`", path.display()),
@@ -40,7 +42,8 @@ pub fn ensure_dir_exists(path: &Path) -> Result<(), OSError> {
     Ok(())
 }
 
-pub fn is_symlink(file: &Path) -> Result<bool, OSError> {
+pub fn is_symlink(file: impl AsRef<Path>) -> Result<bool, OSError> {
+    let file = file.as_ref();
     let metadata = fs::symlink_metadata(file).map_err(|err| OSError::IO {
         msg: format!("Failed to optain metadata for `{}`", file.display()),
         err,
@@ -48,7 +51,9 @@ pub fn is_symlink(file: &Path) -> Result<bool, OSError> {
     Ok(metadata.file_type().is_symlink())
 }
 
-pub fn move_file(source: &Path, dest: &Path) -> Result<(), OSError> {
+pub fn move_file(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(), OSError> {
+    let source = source.as_ref();
+    let dest = dest.as_ref();
     fs::rename(source, dest).map_err(|err| OSError::IO {
         msg: format!(
             "Failed to move `{}` to `{}`",
@@ -59,14 +64,17 @@ pub fn move_file(source: &Path, dest: &Path) -> Result<(), OSError> {
     })
 }
 
-pub fn remove_file(file: &Path) -> Result<(), OSError> {
+pub fn remove_file(file: impl AsRef<Path>) -> Result<(), OSError> {
+    let file = file.as_ref();
     fs::remove_file(file).map_err(|err| OSError::IO {
         msg: format!("Failed to remove `{}`", file.display()),
         err
     })
 }
 
-pub fn symlink(source: &Path, dest: &Path) -> Result<(), OSError> {
+pub fn symlink(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(), OSError> {
+    let source = source.as_ref();
+    let dest = dest.as_ref();
     unix_symlink(source, dest).map_err(|err| OSError::IO {
         msg: format!(
             "Failed to crate symlink `{}` -> `{}`",
@@ -78,8 +86,9 @@ pub fn symlink(source: &Path, dest: &Path) -> Result<(), OSError> {
 }
 
 pub fn open_file(name: impl AsRef<Path>) -> Result<File, OSError> {
-    File::open(name.as_ref()).map_err(|err| OSError::IO {
-        msg: format!("Failed to open '{:?}'", name.as_ref()),
+    let name = name.as_ref();
+    File::open(name).map_err(|err| OSError::IO {
+        msg: format!("Failed to open `{}`", name.display()),
         err,
     })
 }
@@ -91,7 +100,7 @@ pub fn read_file(
     let reader = BufReader::new(open_file(&name)?);
     Ok(reader.lines().map(move |line| {
         line.map_err(|err| OSError::IO {
-            msg: format!("Failed to read '{:?}'", path),
+            msg: format!("Failed to read `{}`", path.display()),
             err,
         })
     }))
