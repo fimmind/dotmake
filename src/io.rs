@@ -65,7 +65,7 @@ macro_rules! print_error {
 macro_rules! print_warn {
     ($($fmt_args:expr),+) => {{
         use $crate::io::*;
-        print_msg(format!($($fmt_args),+, MessageType::Warning));
+        print_msg(format!($($fmt_args),+), MessageType::Warning);
     }};
 }
 
