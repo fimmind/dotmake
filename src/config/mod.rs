@@ -16,6 +16,7 @@ lazy_static! {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde(flatten)]
     actions_conf: RuleActionsConf,
