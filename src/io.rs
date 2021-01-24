@@ -1,8 +1,8 @@
+use crate::cli::OPTIONS;
 use colored::*;
-use dialoguer::{Confirm, theme::ColorfulTheme};
+use dialoguer::{theme::ColorfulTheme, Confirm};
 use std::fmt::{self, Display};
 use std::str;
-use crate::cli::OPTIONS;
 
 // OUTPUT
 // ------
@@ -89,4 +89,11 @@ pub fn confirm(prompt: &str, default: bool) -> bool {
             .interact()
             .unwrap_or_else(exit_error_fn!("Failed to perform input"))
     }
+}
+
+#[macro_export]
+macro_rules! confirm {
+    ($($format_arg: expr),*; $default: expr) => {
+        $crate::io::confirm(&format!($($format_arg),*), $default)
+    };
 }
