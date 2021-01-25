@@ -68,7 +68,7 @@ pub fn remove_file(file: impl AsRef<Path>) -> Result<(), OSError> {
     let file = file.as_ref();
     fs::remove_file(file).map_err(|err| OSError::IO {
         msg: format!("Failed to remove `{}`", file.display()),
-        err
+        err,
     })
 }
 

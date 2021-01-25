@@ -1,11 +1,11 @@
-mod subcommand;
 mod options;
+mod subcommand;
 
-use structopt::StructOpt;
 use lazy_static::lazy_static;
+use structopt::StructOpt;
 
-use subcommand::Subcommand;
 use options::Options;
+use subcommand::Subcommand;
 
 lazy_static! {
     static ref CLI: Cli = Cli::from_args();

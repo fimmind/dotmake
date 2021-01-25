@@ -1,7 +1,7 @@
 use super::{Action, RuleActionsConf};
 use crate::cli::OPTIONS;
 use crate::os::{
-    ensure_dir_exists, get_file_name, is_symlink, remove_file, move_file, symlink, OSError,
+    ensure_dir_exists, get_file_name, is_symlink, move_file, remove_file, symlink, OSError,
 };
 use std::collections::HashMap;
 use std::env::set_current_dir;

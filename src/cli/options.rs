@@ -1,6 +1,6 @@
+use crate::os::{self, OSError};
 use std::path::PathBuf;
 use structopt::StructOpt;
-use crate::os::{self, OSError};
 
 #[derive(Debug, StructOpt)]
 pub struct Options {
@@ -39,5 +39,4 @@ impl Options {
             None => os::get_distro_id(),
         }
     }
-
 }

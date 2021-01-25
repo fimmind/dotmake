@@ -1,15 +1,15 @@
-mod install;
-mod exec;
-mod completion;
 mod add;
+mod completion;
+mod exec;
+mod install;
 
-use structopt::StructOpt;
 use std::error::Error;
+use structopt::StructOpt;
 
-use install::Install;
-use exec::Exec;
-use completion::Completion;
 use add::Add;
+use completion::Completion;
+use exec::Exec;
+use install::Install;
 
 #[derive(Debug, StructOpt)]
 pub enum Subcommand {
