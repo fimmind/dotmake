@@ -6,20 +6,11 @@ use serde::{Deserialize, Deserializer};
 use std::collections::HashSet;
 use std::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
+#[serde(transparent)]
 pub struct Deps {
+    #[serde(deserialize_with = "deserialize_identifiers_set")]
     deps: HashSet<Identifier>,
-}
-
-impl<'de> Deserialize<'de> for Deps {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Ok(Deps {
-            deps: deserialize_identifiers_set(deserializer)?,
-        })
-    }
 }
 
 impl Action for Deps {

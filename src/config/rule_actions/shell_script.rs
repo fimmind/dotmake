@@ -5,25 +5,31 @@ use std::error::Error;
 use tempdir::TempDir;
 
 #[derive(Debug, Deserialize)]
-pub struct ShellScript(String);
+#[serde(transparent)]
+pub struct ShellScript {
+    script: String,
+}
 
 impl Action for ShellScript {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         Ok(run_shell_script(
             &conf.shell,
             OPTIONS.dotfiles_dir(),
-            &self.0,
+            &self.script,
         )?)
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TempDirShellScript(String);
+#[serde(transparent)]
+pub struct TempDirShellScript {
+    script: String,
+}
 
 impl Action for TempDirShellScript {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         let temp_dir = TempDir::new("dotmake")?;
-        run_shell_script(&conf.shell, temp_dir.path(), &self.0)?;
+        run_shell_script(&conf.shell, temp_dir.path(), &self.script)?;
         temp_dir.close()?;
         Ok(())
     }

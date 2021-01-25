@@ -9,8 +9,8 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize)]
+#[serde(transparent)]
 pub struct Links {
-    #[serde(flatten)]
     links: HashMap<PathBuf, PathBuf>,
 }
 
