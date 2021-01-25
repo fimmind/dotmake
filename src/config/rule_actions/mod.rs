@@ -1,15 +1,16 @@
-mod shell_script;
 mod deps;
 mod links;
+mod shell_script;
 
-use crate::deps_resolver::DepsConf;
+use crate::deps_graph::DepsConf;
+use crate::identifier::Identifier;
 use std::error::Error;
 use std::path::PathBuf;
 use thiserror::Error;
 
-use shell_script::{ShellScript, TempDirShellScript};
 use deps::{Deps, PostDeps};
 use links::Links;
+use shell_script::{ShellScript, TempDirShellScript};
 
 #[derive(Debug, Error)]
 pub enum RuleActionsError {
@@ -52,7 +53,7 @@ enum Actions {
 
 pub trait Action {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
-    fn get_deps_conf(&self) -> DepsConf {
+    fn get_deps_conf(&self) -> DepsConf<Identifier> {
         DepsConf::new()
     }
 }
@@ -84,7 +85,7 @@ impl Actions {
         self.as_dyn_action().perform(conf)
     }
 
-    fn get_deps_conf(&self) -> DepsConf {
+    fn get_deps_conf(&self) -> DepsConf<Identifier> {
         self.as_dyn_action().get_deps_conf()
     }
 }
@@ -93,7 +94,7 @@ impl Actions {
 #[serde(from = "Vec<Actions>")]
 pub struct RuleActions {
     actions: Vec<Actions>,
-    deps_conf: DepsConf,
+    deps_conf: DepsConf<Identifier>,
 }
 
 impl From<Vec<Actions>> for RuleActions {
@@ -124,11 +125,11 @@ impl RuleActions {
         Ok(())
     }
 
-    pub fn deps_conf(&self) -> &DepsConf {
+    pub fn deps_conf(&self) -> &DepsConf<Identifier> {
         &self.deps_conf
     }
 
-    fn get_deps_conf(actions: &[Actions]) -> DepsConf {
+    fn get_deps_conf(actions: &[Actions]) -> DepsConf<Identifier> {
         let mut deps_conf = DepsConf::new();
         for action in actions {
             deps_conf.merge(action.get_deps_conf())

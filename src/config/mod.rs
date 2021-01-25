@@ -2,7 +2,7 @@ mod deserializers;
 pub mod rule_actions;
 
 use crate::cli::OPTIONS;
-use crate::deps_resolver::DepsConf;
+use crate::deps_graph::DepsConf;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use lazy_static::lazy_static;
@@ -85,7 +85,7 @@ impl<'a> Rule<'a> {
         self.ident
     }
 
-    pub fn deps_conf(&self) -> &'a DepsConf {
+    pub fn deps_conf(&self) -> &'a DepsConf<Identifier> {
         self.actions.deps_conf()
     }
 

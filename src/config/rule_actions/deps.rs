@@ -1,6 +1,6 @@
 use super::{Action, RuleActionsConf};
 use crate::config::deserializers::deserialize_identifiers_set;
-use crate::deps_resolver::DepsConf;
+use crate::deps_graph::DepsConf;
 use crate::identifier::Identifier;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashSet;
@@ -27,7 +27,7 @@ impl Action for Deps {
         Ok(())
     }
 
-    fn get_deps_conf(&self) -> DepsConf {
+    fn get_deps_conf(&self) -> DepsConf<Identifier> {
         let mut deps_conf = DepsConf::new();
         deps_conf.add_deps(self.deps.iter().map(Clone::clone));
         deps_conf
@@ -55,7 +55,7 @@ impl Action for PostDeps {
         Ok(())
     }
 
-    fn get_deps_conf(&self) -> DepsConf {
+    fn get_deps_conf(&self) -> DepsConf<Identifier> {
         let mut deps_conf = DepsConf::new();
         deps_conf.add_post_deps(self.post_deps.iter().map(Clone::clone));
         deps_conf

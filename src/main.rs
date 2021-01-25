@@ -9,7 +9,7 @@ extern crate serde;
 mod io;
 mod cli;
 mod config;
-mod deps_resolver;
+mod deps_graph;
 mod identifier;
 mod os;
 

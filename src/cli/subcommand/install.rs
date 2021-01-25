@@ -1,5 +1,5 @@
 use crate::config::CONFIG;
-use crate::deps_resolver::DepsResolver;
+use crate::deps_graph::DepsGraph;
 use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
@@ -14,13 +14,17 @@ pub struct Install {
 
 impl Install {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let resolver = DepsResolver::init(&self.rules, |ident| {
+        let resolver = DepsGraph::build(&self.rules, |ident| {
             CONFIG
                 .get_rule(ident)
                 .unwrap_or_else(exit_error_fn!())
                 .deps_conf()
         });
-        for ident in resolver.try_resolve()? {
+        let resolved = resolver
+            .resolve()
+            .map_err(|cycle| format!("Found cycle in dpendencies: {}", cycle))?;
+        for ident in resolved {
+            print_info!("Performing `{}`...", ident);
             CONFIG.get_rule(ident)?.perform()?;
         }
         Ok(())
