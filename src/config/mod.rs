@@ -31,7 +31,7 @@ pub enum ConfigError {
     ParsingError(#[from] serde_yaml::Error),
 
     #[error("Undefined rule: {0}")]
-    UnknownRule(Identifier),
+    UndefinedRule(Identifier),
 
     #[error(transparent)]
     OSError(#[from] OSError),
@@ -57,7 +57,7 @@ impl Config {
             actions: self
                 .rules
                 .get(&ident)
-                .ok_or_else(|| ConfigError::UnknownRule(ident.clone()))?,
+                .ok_or_else(|| ConfigError::UndefinedRule(ident.clone()))?,
             actions_conf: &self.actions_conf,
             ident,
         })
