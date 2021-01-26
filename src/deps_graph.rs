@@ -1,20 +1,20 @@
 use itertools::Itertools;
 
 use std::collections::{HashMap, HashSet};
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::iter;
 
 pub struct DepsGraph<'a, I> {
-    dependcies: HashMap<&'a I, DepsConf<&'a I>>,
+    dependcies: HashMap<&'a I, HashSet<&'a I>>,
     roots: HashSet<&'a I>,
 }
 
-impl<'a, I: Eq + Hash> DepsGraph<'a, I> {
+impl<'a, I: Debug + Eq + Hash> DepsGraph<'a, I> {
     pub fn init(roots: impl IntoIterator<Item = &'a I>) -> Self {
         let roots: HashSet<&'a I> = roots.into_iter().collect();
         DepsGraph {
-            dependcies: roots.iter().map(|&k| (k, DepsConf::new())).collect(),
+            dependcies: roots.iter().map(|&k| (k, HashSet::new())).collect(),
             roots,
         }
     }
@@ -26,25 +26,17 @@ impl<'a, I: Eq + Hash> DepsGraph<'a, I> {
         }
     }
 
-    pub fn build(
-        roots: impl IntoIterator<Item = &'a I>,
-        get_deps_for: impl Fn(&'a I) -> &'a DepsConf<I>,
-    ) -> Self {
-        let mut visited = HashSet::new();
-        let mut stack = roots.into_iter().collect::<Vec<_>>();
-        let mut deps_graph = DepsGraph::init(stack.iter().map(|&i| i));
+    pub fn build(roots: Vec<&'a I>, get_deps_for: impl Fn(&'a I) -> &'a HashSet<I>) -> Self {
+        let mut stack = roots;
+        let mut seen = HashSet::new();
+        let mut deps_graph = DepsGraph::new();
+
         while let Some(node) = stack.pop() {
-            let deps_conf = get_deps_for(node);
-            for dep in deps_conf.deps() {
-                deps_graph.add_dep(node, dep);
-                if visited.insert(dep) {
+            let deps = get_deps_for(node);
+            deps_graph.add_deps(node, deps);
+            for dep in deps {
+                if seen.insert(dep) {
                     stack.push(dep);
-                }
-            }
-            for post in deps_conf.post_deps() {
-                deps_graph.add_dep(post, node);
-                if visited.insert(post) {
-                    stack.push(post)
                 }
             }
         }
@@ -55,25 +47,25 @@ impl<'a, I: Eq + Hash> DepsGraph<'a, I> {
         self.ensure_node(node);
     }
 
-    fn ensure_node(&mut self, node: &'a I) -> &mut DepsConf<&'a I> {
+    fn ensure_node(&mut self, node: &'a I) -> &mut HashSet<&'a I> {
         let deps = &mut self.dependcies;
         let roots = &mut self.roots;
         deps.entry(node).or_insert_with(|| {
             roots.insert(node);
-            DepsConf::new()
+            HashSet::new()
         })
     }
 
     pub fn add_dep(&mut self, node: &'a I, dep: &'a I) {
         self.ensure_node(dep);
-        self.ensure_node(node).add_dep(dep);
+        self.ensure_node(node).insert(dep);
         self.roots.remove(dep);
     }
 
-    pub fn add_post_dep(&mut self, node: &'a I, post_dep: &'a I) {
-        self.ensure_node(post_dep);
-        self.ensure_node(node).add_post_dep(post_dep);
-        self.roots.remove(node);
+    pub fn add_deps(&mut self, node: &'a I, deps: impl IntoIterator<Item = &'a I>) {
+        for dep in deps {
+            self.add_dep(node, dep);
+        }
     }
 
     fn find_path(&self, from: &'a I, to: &'a I) -> Option<Vec<&'a I>> {
@@ -89,10 +81,8 @@ impl<'a, I: Eq + Hash> DepsGraph<'a, I> {
                 if resolved.contains(&next) {
                     return Some(Ok(next));
                 }
-                let deps_conf = &self.dependcies[&next];
-                stack.extend(deps_conf.post_deps());
                 stack.push(next);
-                stack.extend(deps_conf.deps());
+                stack.extend(&self.dependcies[&next]);
                 resolved.insert(next);
             }
             None
@@ -136,67 +126,6 @@ impl<'a, I: Display> Display for Cycle<'a, I> {
             write!(f, " -> {}", next)?;
         }
         Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct DepsConf<I> {
-    deps: HashSet<I>,
-    post_deps: HashSet<I>,
-}
-
-impl<I: Eq + Hash> DepsConf<I> {
-    pub fn new() -> Self {
-        DepsConf {
-            deps: HashSet::new(),
-            post_deps: HashSet::new(),
-        }
-    }
-
-    pub fn deps(&self) -> impl Iterator<Item = &I> {
-        self.deps.iter()
-    }
-
-    pub fn post_deps(&self) -> impl Iterator<Item = &I> {
-        self.post_deps.iter()
-    }
-
-    pub fn add_dep(&mut self, dep: I) {
-        self.deps.insert(dep);
-    }
-
-    pub fn add_post_dep(&mut self, post_dep: I) {
-        self.post_deps.insert(post_dep);
-    }
-
-    pub fn add_deps(&mut self, deps: impl IntoIterator<Item = I>) {
-        self.deps.extend(deps)
-    }
-
-    pub fn add_post_deps(&mut self, post_deps: impl IntoIterator<Item = I>) {
-        self.post_deps.extend(post_deps)
-    }
-
-    pub fn merge(&mut self, other: Self) {
-        self.add_deps(other.deps);
-        self.add_post_deps(other.post_deps);
-    }
-
-    pub fn remove_deps<'a>(&'a mut self, deps: impl IntoIterator<Item = &'a I>) {
-        for dep in deps {
-            self.deps.remove(dep);
-        }
-    }
-
-    pub fn remove_post_deps<'a>(&'a mut self, post_deps: impl IntoIterator<Item = &'a I>) {
-        for post_dep in post_deps {
-            self.post_deps.remove(post_dep);
-        }
-    }
-
-    pub fn disjoin(&mut self, other: &Self) {
-        self.remove_deps(&other.deps);
-        self.remove_post_deps(&other.post_deps);
     }
 }
 

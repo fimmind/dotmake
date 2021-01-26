@@ -2,12 +2,11 @@ mod deserializers;
 pub mod rule_actions;
 
 use crate::cli::OPTIONS;
-use crate::deps_graph::DepsConf;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use lazy_static::lazy_static;
 use rule_actions::{RuleActions, RuleActionsConf, RuleActionsError};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use thiserror::Error;
 
@@ -85,8 +84,8 @@ impl<'a> Rule<'a> {
         self.ident
     }
 
-    pub fn deps_conf(&self) -> &'a DepsConf<Identifier> {
-        self.actions.deps_conf()
+    pub fn deps(&self) -> &'a HashSet<Identifier> {
+        self.actions.deps()
     }
 
     pub fn perform_nth(&self, n: usize) -> Result<(), RuleError> {

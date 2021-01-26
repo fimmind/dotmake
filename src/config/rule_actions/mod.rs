@@ -2,13 +2,13 @@ mod deps;
 mod links;
 mod shell_script;
 
-use crate::deps_graph::DepsConf;
 use crate::identifier::Identifier;
+use std::collections::HashSet;
 use std::error::Error;
 use std::path::PathBuf;
 use thiserror::Error;
 
-use deps::{Deps, PostDeps};
+use deps::Deps;
 use links::Links;
 use shell_script::{ShellScript, TempDirShellScript};
 
@@ -46,15 +46,12 @@ enum Actions {
 
     /// Rule's dependencies
     Deps(Deps),
-
-    /// Rule's post dependencies
-    Post(PostDeps),
 }
 
 pub trait Action {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
-    fn get_deps_conf(&self) -> DepsConf<Identifier> {
-        DepsConf::new()
+    fn get_deps(&self) -> HashSet<Identifier> {
+        HashSet::new()
     }
 }
 
@@ -66,7 +63,7 @@ impl Action for () {
 
 macro_rules! match_dyn_action {
     ($self: expr) => {
-        match_dyn_action!($self; Pkgs, Shell, InTemp, Links, Deps, Post)
+        match_dyn_action!($self; Pkgs, Shell, InTemp, Links, Deps)
     };
 
     ($self: expr; $($action: ident),*) => {
@@ -85,8 +82,8 @@ impl Actions {
         self.as_dyn_action().perform(conf)
     }
 
-    fn get_deps_conf(&self) -> DepsConf<Identifier> {
-        self.as_dyn_action().get_deps_conf()
+    fn get_deps(&self) -> HashSet<Identifier> {
+        self.as_dyn_action().get_deps()
     }
 }
 
@@ -94,13 +91,13 @@ impl Actions {
 #[serde(from = "Vec<Actions>")]
 pub struct RuleActions {
     actions: Vec<Actions>,
-    deps_conf: DepsConf<Identifier>,
+    deps: HashSet<Identifier>,
 }
 
 impl From<Vec<Actions>> for RuleActions {
     fn from(actions: Vec<Actions>) -> Self {
         RuleActions {
-            deps_conf: Self::get_deps_conf(&actions),
+            deps: Self::get_deps(&actions),
             actions,
         }
     }
@@ -125,15 +122,11 @@ impl RuleActions {
         Ok(())
     }
 
-    pub fn deps_conf(&self) -> &DepsConf<Identifier> {
-        &self.deps_conf
+    pub fn deps(&self) -> &HashSet<Identifier> {
+        &self.deps
     }
 
-    fn get_deps_conf(actions: &[Actions]) -> DepsConf<Identifier> {
-        let mut deps_conf = DepsConf::new();
-        for action in actions {
-            deps_conf.merge(action.get_deps_conf())
-        }
-        deps_conf
+    fn get_deps(actions: &[Actions]) -> HashSet<Identifier> {
+        actions.iter().map(Actions::get_deps).flatten().collect()
     }
 }
