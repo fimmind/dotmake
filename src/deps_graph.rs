@@ -278,9 +278,9 @@ mod tests {
             .enumerate()
             .map(|(i, d)| (d, i))
             .collect();
-        for &(node, dep) in edges.iter() {
+        for (node, dep) in edges.iter() {
             assert!(
-                positions[&dep] < positions[&node],
+                positions[dep] < positions[node],
                 "pos({0}) < pos({1}), but {0} depends on {1}",
                 node,
                 dep
