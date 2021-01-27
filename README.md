@@ -20,12 +20,12 @@ It will allow you to:
 - automate installing from source;
 - automatically backup replaced config files after creating soft links to
   installed configuration;
-- automate adding new files to tracked configuration (move a given file to
+- automate adding new files to tracked configuration (i.e. move a given file to
   dotfiles directory and crate soft link pointing at it);
 
 ## Installation
 
-As long as there is no stable release, you can build `dotm` binary from source
+As long as there is no stable release, you can build `dotmake` binary from source
 using [rustup](https://rustup.rs/) (Don't forget to add `~/.cargo/bin` into your
 `PATH`):
 
@@ -39,19 +39,19 @@ that cargo only allows to install into folders named `bin` and that you have to
 specify directory containing `bin`, not the path to `bin` folder itself:
 
 ```sh
-$ cargo install --git https://github.com/fimmind/dotm --root ~/.local
+$ cargo install --git https://github.com/fimmind/dotmake --root ~/.local
 ```
 
 ## Usage
 
-***maybe out-of-date.*** See `dotm --help`
-```shell
-$ dotm --help
-dotm 0.1.0
+***maybe out-of-date.*** See `dotmake --help`
+```
+$ dotmake --help
+dotmake 0.1.0
 Dotfiles installation manager
 
 USAGE:
-    dotm [FLAGS] [OPTIONS] <SUBCOMMAND>
+    dotmake [FLAGS] [OPTIONS] <SUBCOMMAND>
 
 FLAGS:
     -h, --help         Prints help information
@@ -59,16 +59,15 @@ FLAGS:
     -V, --version      Prints version information
 
 OPTIONS:
-    -D, --distro <ID>     Specify distribution id to use [default: <current_distro>]
+    -D, --distro <ID>     Specify distribution id to use
     -d, --dotdir <DIR>    Set a custom dotfiles directory [env: DOTM_DOTFILES_DIR=]  [default: ./]
 
 SUBCOMMANDS:
-    add        Move files to dotfiles directory and create symbolic links pointing at them
-    dotdir     Print path Dotfiles' directory
-    exec       Perform specified actions for a given rule
-    help       Prints this message or the help of the given subcommand(s)
-    install    Perform installation of given rules
-    pkg        Install package(s) by a given package manager
+    add           Move a file to dotfiles directory, replacing it with a symlink
+    completion    Generate a completion script for a given shell
+    exec          Perform nth action of a given rule
+    help          Prints this message or the help of the given subcommand(s)
+    install       Perform installation of given rules
 ```
 
 ## TODO Configuration
