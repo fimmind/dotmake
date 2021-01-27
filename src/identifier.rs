@@ -55,3 +55,16 @@ impl str::FromStr for Identifier {
         Identifier::new(s.into()).map_err(|name| format!("invalid identifier: {}", name))
     }
 }
+
+/// Repressents a list of identifers separeted with a whitespace
+#[derive(Debug, Deserialize)]
+pub struct Identifiers(String);
+
+impl IntoIterator for &Identifiers {
+    type Item = Identifier;
+    type IntoIter = impl Iterator<Item = Identifier>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.split_whitespace().map(|s| Identifier(s.to_owned()))
+    }
+}

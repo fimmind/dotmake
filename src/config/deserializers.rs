@@ -1,6 +1,4 @@
-use crate::identifier::Identifier;
 use serde::de::{Deserialize, Deserializer};
-use std::collections::HashSet;
 
 /// A helper for deserializing `List` as either a sequence or a singletone
 #[derive(Debug, Deserialize)]
@@ -28,26 +26,4 @@ where
     T: Deserialize<'de>,
 {
     ListEnum::deserialize(deserializer).map(ListEnum::to_vec)
-}
-
-/// Deserialize a whitespace-separated list of `Identifier`s
-pub fn deserialize_identifiers_list<'de, D>(deserializer: D) -> Result<Vec<Identifier>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    Ok(String::deserialize(deserializer)?
-        .split_whitespace()
-        .map(|name| Identifier::new(name.to_string()).unwrap())
-        .collect())
-}
-
-/// Deserialize a whitespace-separated set of `Identifier`s containing no duplicates
-pub fn deserialize_identifiers_set<'de, D>(deserializer: D) -> Result<HashSet<Identifier>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    Ok(String::deserialize(deserializer)?
-        .split_whitespace()
-        .map(|name| Identifier::new(name.to_string()).unwrap())
-        .collect())
 }
