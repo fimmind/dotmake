@@ -6,15 +6,10 @@ use crate::cli::OPTIONS;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use deps_graph::DepsGraph;
-use lazy_static::lazy_static;
 use rule_actions::{RuleActions, RuleActionsConf, RuleActionsError};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use thiserror::Error;
-
-lazy_static! {
-    pub static ref CONFIG: Config = Config::init().unwrap_or_else(exit_error_fn!());
-}
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]

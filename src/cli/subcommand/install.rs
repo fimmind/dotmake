@@ -1,4 +1,4 @@
-use crate::config::CONFIG;
+use crate::config::Config;
 use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
@@ -13,11 +13,12 @@ pub struct Install {
 
 impl Install {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let graph = CONFIG.get_deps_graph()?;
+        let config = Config::init()?;
+        let graph = config.get_deps_graph()?;
         let resolved = graph.resolve(self.rules.iter().collect())?;
         for ident in resolved {
             print_info!("Performing `{}`...", ident);
-            CONFIG.try_get_rule(&ident)?.perform()?;
+            config.try_get_rule(&ident)?.perform()?;
         }
         Ok(())
     }

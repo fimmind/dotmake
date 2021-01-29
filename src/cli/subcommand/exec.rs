@@ -1,4 +1,4 @@
-use crate::config::CONFIG;
+use crate::config::Config;
 use crate::identifier::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
@@ -17,6 +17,7 @@ pub struct Exec {
 
 impl Exec {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        Ok(CONFIG.try_get_rule(&self.rule)?.perform_nth(self.n)?)
+        let config = Config::init()?;
+        Ok(config.try_get_rule(&self.rule)?.perform_nth(self.n)?)
     }
 }
