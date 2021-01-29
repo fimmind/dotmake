@@ -50,7 +50,7 @@ enum Actions {
 
 pub trait Action {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
-    fn get_deps(&self) -> HashSet<Identifier> {
+    fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
         HashSet::new()
     }
 }
@@ -82,25 +82,15 @@ impl Actions {
         self.as_dyn_action().perform(conf)
     }
 
-    fn get_deps(&self) -> HashSet<Identifier> {
-        self.as_dyn_action().get_deps()
+    fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
+        self.as_dyn_action().get_deps(conf)
     }
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(from = "Vec<Actions>")]
+#[serde(transparent)]
 pub struct RuleActions {
     actions: Vec<Actions>,
-    deps: HashSet<Identifier>,
-}
-
-impl From<Vec<Actions>> for RuleActions {
-    fn from(actions: Vec<Actions>) -> Self {
-        RuleActions {
-            deps: Self::get_deps(&actions),
-            actions,
-        }
-    }
 }
 
 impl RuleActions {
@@ -122,11 +112,7 @@ impl RuleActions {
         Ok(())
     }
 
-    pub fn deps(&self) -> &HashSet<Identifier> {
-        &self.deps
-    }
-
-    fn get_deps(actions: &[Actions]) -> HashSet<Identifier> {
-        actions.iter().map(Actions::get_deps).flatten().collect()
+    pub fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
+        self.actions.iter().map(|a| a.get_deps(conf)).flatten().collect()
     }
 }

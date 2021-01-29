@@ -14,7 +14,7 @@ impl Action for Deps {
         Ok(())
     }
 
-    fn get_deps(&self) -> HashSet<Identifier> {
+    fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
         self.deps.into_iter().collect()
     }
 }

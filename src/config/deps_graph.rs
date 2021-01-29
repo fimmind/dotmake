@@ -1,16 +1,15 @@
-use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::iter::FromIterator;
 
-pub struct DepsGraph<'a, I> {
-    graph: HashMap<&'a I, HashSet<&'a I>>,
+pub struct DepsGraph<I> {
+    graph: HashMap<I, HashSet<I>>,
 }
 
-impl<'a, I: Hash + Eq + Debug + Display + Clone> DepsGraph<'a, I> {
-    pub fn resolve(&self, roots: Vec<&'a I>) -> Result<Vec<&'a I>, CycleError<I>> {
+impl<I: Hash + Eq + Debug + Display + Clone> DepsGraph<I> {
+    pub fn resolve<'a>(&'a self, roots: Vec<&'a I>) -> Result<Vec<&'a I>, CycleError<I>> {
         let mut res = Vec::new();
         let mut resolving = HashSet::new();
         let mut resolved = HashSet::new();
@@ -51,23 +50,8 @@ impl<'a, I: Hash + Eq + Debug + Display + Clone> DepsGraph<'a, I> {
     }
 }
 
-impl<'a, I> From<HashMap<&'a I, HashSet<&'a I>>> for DepsGraph<'a, I> {
-    fn from(graph: HashMap<&'a I, HashSet<&'a I>>) -> Self {
-        DepsGraph { graph }
-    }
-}
-
-impl<'a, I, B> From<&'a HashMap<B, HashSet<B>>> for DepsGraph<'a, I>
-where
-    I: Hash + Eq,
-    B: Borrow<I>,
-{
-    fn from(ref_graph: &'a HashMap<B, HashSet<B>>) -> Self {
-        let mut graph = HashMap::<_, HashSet<_>>::new();
-        for (k, v) in ref_graph {
-            let entry = graph.entry(k.borrow()).or_default();
-            entry.extend(v.iter().map(|i| i.borrow()));
-        }
+impl<'a, I> From<HashMap<I, HashSet<I>>> for DepsGraph<I> {
+    fn from(graph: HashMap<I, HashSet<I>>) -> Self {
         DepsGraph { graph }
     }
 }
@@ -151,7 +135,7 @@ mod tests {
     /// Resolve a given graph starting with given roots and then assert that for
     /// every (node, dep) pair from that graph position(dep) < position(node)
     fn test_resolving(roots: &[i32], graph: &HashMap<i32, HashSet<i32>>) -> Vec<i32> {
-        let deps_graph: DepsGraph<i32> = graph.into();
+        let deps_graph: DepsGraph<i32> = graph.clone().into();
         let resolved = deps_graph.resolve(roots.iter().collect()).unwrap();
         println!("Resolved: {:?}", resolved);
 

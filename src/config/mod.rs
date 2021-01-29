@@ -61,14 +61,14 @@ impl Config {
             .ok_or_else(|| ConfigError::UndefinedRule(ident.clone()))
     }
 
-    pub fn get_deps_graph(&self) -> Result<DepsGraph<'_, Identifier>, ConfigError> {
+    pub fn get_deps_graph(&self) -> Result<DepsGraph<Identifier>, ConfigError> {
         let mut graph = HashMap::<_, HashSet<_>>::new();
         for ident in self.rules.keys() {
-            let deps = self.get_rule(ident).unwrap().deps();
+            let deps = self.get_rule(ident).unwrap().get_deps();
             for dep in deps.iter() {
                 self.try_get_rule(dep)?; // TODO: test that all identifiers are valid right after deserialization
             }
-            graph.entry(ident).or_default().extend(deps);
+            graph.entry(ident.clone()).or_default().extend(deps);
         }
         Ok(graph.into())
     }
@@ -95,8 +95,8 @@ impl<'a> Rule<'a> {
         self.ident
     }
 
-    pub fn deps(&self) -> &'a HashSet<Identifier> {
-        self.actions.deps()
+    pub fn get_deps(&self) -> HashSet<Identifier> {
+        self.actions.get_deps(&self.actions_conf)
     }
 
     pub fn perform_nth(&self, n: usize) -> Result<(), RuleError> {
