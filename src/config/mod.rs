@@ -1,9 +1,11 @@
+mod deps_graph;
 mod deserializers;
 pub mod rule_actions;
 
 use crate::cli::OPTIONS;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
+use deps_graph::DepsGraph;
 use lazy_static::lazy_static;
 use rule_actions::{RuleActions, RuleActionsConf, RuleActionsError};
 use std::collections::{HashMap, HashSet};
@@ -51,15 +53,29 @@ impl Config {
             .join(format!("dotm-{}.yaml", OPTIONS.distro_id()?)))
     }
 
-    pub fn get_rule<'a>(&'a self, ident: &'a Identifier) -> Result<Rule<'a>, ConfigError> {
-        Ok(Rule {
-            actions: self
-                .rules
-                .get(&ident)
-                .ok_or_else(|| ConfigError::UndefinedRule(ident.clone()))?,
+    pub fn get_rule<'a>(&'a self, ident: &'a Identifier) -> Option<Rule<'a>> {
+        self.rules.get(ident).map(|actions| Rule {
             actions_conf: &self.actions_conf,
+            actions,
             ident,
         })
+    }
+
+    pub fn try_get_rule<'a>(&'a self, ident: &'a Identifier) -> Result<Rule<'a>, ConfigError> {
+        self.get_rule(ident)
+            .ok_or_else(|| ConfigError::UndefinedRule(ident.clone()))
+    }
+
+    pub fn get_deps_graph(&self) -> Result<DepsGraph<'_, Identifier>, ConfigError> {
+        let mut graph = HashMap::<_, HashSet<_>>::new();
+        for ident in self.rules.keys() {
+            let deps = self.get_rule(ident).unwrap().deps();
+            for dep in deps.iter() {
+                self.try_get_rule(dep)?; // TODO: test that all identifiers are valid right after deserialization
+            }
+            graph.entry(ident).or_default().extend(deps);
+        }
+        Ok(graph.into())
     }
 }
 

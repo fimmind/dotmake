@@ -17,6 +17,6 @@ pub struct Exec {
 
 impl Exec {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        Ok(CONFIG.get_rule(&self.rule)?.perform_nth(self.n)?)
+        Ok(CONFIG.try_get_rule(&self.rule)?.perform_nth(self.n)?)
     }
 }
