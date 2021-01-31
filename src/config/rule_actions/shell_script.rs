@@ -1,5 +1,6 @@
 use super::{Action, RuleActionsConf};
 use crate::cli::OPTIONS;
+use crate::config::deserializers::List;
 use crate::os::run_shell_script;
 use std::error::Error;
 use tempdir::TempDir;
@@ -7,7 +8,7 @@ use tempdir::TempDir;
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct ShellScript {
-    script: String,
+    script: List<String>,
 }
 
 impl Action for ShellScript {
@@ -15,7 +16,7 @@ impl Action for ShellScript {
         Ok(run_shell_script(
             &conf.shell,
             OPTIONS.dotfiles_dir(),
-            &self.script,
+            &self.script.join("\n"),
         )?)
     }
 }
@@ -23,13 +24,13 @@ impl Action for ShellScript {
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct TempDirShellScript {
-    script: String,
+    script: List<String>,
 }
 
 impl Action for TempDirShellScript {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         let temp_dir = TempDir::new("dotmake")?;
-        run_shell_script(&conf.shell, temp_dir.path(), &self.script)?;
+        run_shell_script(&conf.shell, temp_dir.path(), &self.script.join("\n"))?;
         temp_dir.close()?;
         Ok(())
     }
