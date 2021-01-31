@@ -48,7 +48,11 @@ macro_rules! parser_errors {
         })*
     };
 }
-parser_errors!(serde_yaml::Error, serde_lexpr::Error);
+parser_errors! {
+    serde_yaml::Error,
+    serde_lexpr::Error,
+    serde_json::Error,
+}
 
 impl Config {
     pub fn init() -> Result<Self, ConfigError> {
@@ -66,6 +70,7 @@ impl Config {
         let parsers = hashmap! {
             "yaml" => &Self::parse_yaml as Parser,
             "lisp" => &Self::parse_lexpr as Parser,
+            "json" => &Self::parse_json as Parser,
         };
 
         for (ext, parse) in parsers {
@@ -84,6 +89,10 @@ impl Config {
     fn parse_lexpr(file: &File) -> Result<Self, ConfigError> {
         let options = serde_lexpr::parse::Options::elisp();
         Ok(serde_lexpr::from_reader_custom(file, options)?)
+    }
+
+    fn parse_json(file: &File) -> Result<Self, ConfigError> {
+        Ok(serde_json::from_reader(file)?)
     }
 
     pub fn get_rule<'a>(&'a self, ident: &'a Identifier) -> Option<Rule<'a>> {
