@@ -6,15 +6,18 @@ use crate::cli::OPTIONS;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use deps_graph::DepsGraph;
+use maplit::hashmap;
 use rule_actions::{RuleActions, RuleActionsConf, RuleActionsError};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::error::Error;
+use std::fs::File;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    #[serde(flatten)]
+    #[serde(rename = "conf")]
     actions_conf: RuleActionsConf,
 
     #[serde(default)]
@@ -24,7 +27,10 @@ pub struct Config {
 #[derive(Debug, Error)]
 pub enum ConfigError {
     #[error("Failed to parse config: {0}")]
-    ParsingError(#[from] serde_yaml::Error),
+    ParsingError(Box<dyn Error>),
+
+    #[error("Config not found")]
+    ConfigNotFound,
 
     #[error("Undefined rule: {0}")]
     UndefinedRule(Identifier),
@@ -33,19 +39,51 @@ pub enum ConfigError {
     OSError(#[from] OSError),
 }
 
+macro_rules! parser_errors {
+    ($($err_type: ty),*$(,)?) => {
+        $(impl From<$err_type> for ConfigError {
+            fn from(err: $err_type) -> Self {
+                ConfigError::ParsingError(Box::new(err).into())
+            }
+        })*
+    };
+}
+parser_errors!(serde_yaml::Error, serde_lexpr::Error);
+
 impl Config {
     pub fn init() -> Result<Self, ConfigError> {
-        Ok(Self::parse_from(&Self::path()?)?)
+        Ok(Self::parse(&Self::base_path()?)?)
     }
 
-    fn parse_from(path: &PathBuf) -> Result<Self, ConfigError> {
-        Ok(serde_yaml::from_reader(os::open_file(path)?)?)
-    }
-
-    fn path() -> Result<PathBuf, ConfigError> {
+    fn base_path() -> Result<PathBuf, ConfigError> {
         Ok(OPTIONS
             .dotfiles_dir()
-            .join(format!("dotm-{}.yaml", OPTIONS.distro_id()?)))
+            .join(format!("dotm-{}", OPTIONS.distro_id()?)))
+    }
+
+    fn parse(base_path: &Path) -> Result<Self, ConfigError> {
+        type Parser = &'static dyn Fn(&File) -> Result<Config, ConfigError>;
+        let parsers = hashmap! {
+            "yaml" => &Self::parse_yaml as Parser,
+            "lisp" => &Self::parse_lexpr as Parser,
+        };
+
+        for (ext, parse) in parsers {
+            let path = base_path.with_extension(ext);
+            if path.exists() {
+                return parse(&os::open_file(&path)?);
+            }
+        }
+        Err(ConfigError::ConfigNotFound)
+    }
+
+    fn parse_yaml(file: &File) -> Result<Self, ConfigError> {
+        Ok(serde_yaml::from_reader(file)?)
+    }
+
+    fn parse_lexpr(file: &File) -> Result<Self, ConfigError> {
+        let options = serde_lexpr::parse::Options::elisp();
+        Ok(serde_lexpr::from_reader_custom(file, options)?)
     }
 
     pub fn get_rule<'a>(&'a self, ident: &'a Identifier) -> Option<Rule<'a>> {
