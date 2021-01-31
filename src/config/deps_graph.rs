@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::iter::FromIterator;
+use std::ops::{Deref, DerefMut};
 
 pub struct DepsGraph<I> {
     graph: HashMap<I, HashSet<I>>,
@@ -74,6 +75,20 @@ impl<I: Display> Display for CycleError<I> {
     }
 }
 
+impl<T> Deref for CycleError<T> {
+    type Target = Path<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.path
+    }
+}
+
+impl<T> DerefMut for CycleError<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.path
+    }
+}
+
 #[derive(Debug)]
 pub struct Path<I> {
     path: Vec<I>,
@@ -121,6 +136,20 @@ impl<I: Display> Display for Path<I> {
             write!(f, " -> {}", node)?;
         }
         Ok(())
+    }
+}
+
+impl<T> Deref for Path<T> {
+    type Target = Vec<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.path
+    }
+}
+
+impl<T> DerefMut for Path<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.path
     }
 }
 
