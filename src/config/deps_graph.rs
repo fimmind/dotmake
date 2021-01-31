@@ -142,10 +142,10 @@ mod tests {
         let positions: HashMap<_, _> = resolved.iter().map(|&&i| i).zip(0..).collect();
         for (node, deps) in graph {
             for dep in deps {
-                if let (Some(node_pos), Some(dep_pose)) = (positions.get(node), positions.get(dep))
+                if let (Some(node_pos), Some(dep_pos)) = (positions.get(node), positions.get(dep))
                 {
                     assert!(
-                        positions[&dep] < positions[&node],
+                        dep_pos < node_pos,
                         "pos({0}) ≤ pos({1}), but {0} depends on {1}",
                         node,
                         dep
