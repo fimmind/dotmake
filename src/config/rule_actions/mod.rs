@@ -1,6 +1,7 @@
 mod deps;
 mod links;
 mod shell_script;
+mod pkgs;
 
 use crate::identifier::Identifier;
 use std::collections::HashSet;
@@ -11,6 +12,7 @@ use thiserror::Error;
 use deps::Deps;
 use links::Links;
 use shell_script::{ShellScript, TempDirShellScript};
+use pkgs::{PkgManagersConf, Pkgs};
 
 #[derive(Debug, Error)]
 pub enum RuleActionsError {
@@ -25,9 +27,8 @@ pub enum RuleActionsError {
 pub struct RuleActionsConf {
     shell: String,
     backup_dir: PathBuf,
+    pkg_managers: PkgManagersConf,
 }
-
-type Pkgs = (); // TODO
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -52,12 +53,6 @@ pub trait Action {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
     fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
         HashSet::new()
-    }
-}
-
-impl Action for () {
-    fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
-        todo!("Replace mock action with a real one")
     }
 }
 
