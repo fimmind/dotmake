@@ -3,13 +3,27 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::iter::FromIterator;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
+/// Simple dependencies graph abstraction that provides a convinient way of
+/// dependencies resolution
 pub struct DepsGraph<I> {
     graph: HashMap<I, HashSet<I>>,
 }
 
 impl<I: Hash + Eq + Debug + Display + Clone> DepsGraph<I> {
+    /// Resolve dependencies for given roots
+    ///
+    /// This will collect all direct and indirect dependencies for every node in
+    /// `roots` and return them in an order such that for every node of
+    /// resulting vector it's dependencies, if any, are placed before that node.
+    /// It's guaranteed that resulting vector contains no duplicates
+    ///
+    /// # Errors
+    /// If it's not possible to complete resolving due to cycle found in
+    /// dependencies, [`CycleError`] is returned
+    ///
+    /// [`CycleError`]: ./struct.CycleError.html
     pub fn resolve<'a>(&'a self, roots: Vec<&'a I>) -> Result<Vec<&'a I>, CycleError<I>> {
         let mut res = Vec::new();
         let mut resolving = HashSet::new();
@@ -46,7 +60,13 @@ impl<I: Hash + Eq + Debug + Display + Clone> DepsGraph<I> {
         Ok(res)
     }
 
-    pub fn find_path(&self, start: &I, dest: &I) -> Option<Path<&I>> {
+    /// Finds the shortest path from `start` to `dest` in dependencies graph if
+    /// one exists. Remember that edges of the graph are orientated from nodes
+    /// to their dependencies
+    ///
+    /// First and last elements of the resulting vector are always `start` and
+    /// `dest` respectively
+    fn find_path(&self, start: &I, dest: &I) -> Option<Path<&I>> {
         todo!("DepsGraph::find_path")
     }
 }
@@ -57,14 +77,25 @@ impl<'a, I> From<HashMap<I, HashSet<I>>> for DepsGraph<I> {
     }
 }
 
-#[derive(Debug)]
+/// An error stating that a dependencies graph contains a cycle and thus can't be
+/// resolved
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CycleError<I> {
     path: Path<I>,
 }
 
-impl<I> CycleError<I> {
+impl<I: Eq> CycleError<I> {
+    /// Create a new `CycleError`. Panics if `path.first() != path.last()` or if
+    /// `path.len() < 2`
     pub fn new(path: Path<I>) -> Self {
+        assert!(path.first() == path.last());
+        assert!(path.len() > 1);
         Self { path }
+    }
+
+    /// Get a path of the cycle
+    pub fn path(&self) -> &Path<I> {
+        &self.path
     }
 }
 
@@ -75,36 +106,37 @@ impl<I: Display> Display for CycleError<I> {
     }
 }
 
-impl<T> Deref for CycleError<T> {
-    type Target = Path<T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.path
+impl<I> From<CycleError<I>> for Path<I> {
+    fn from(err: CycleError<I>) -> Self {
+        err.path
     }
 }
 
-impl<T> DerefMut for CycleError<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.path
-    }
-}
-
-#[derive(Debug)]
+/// A path in dependencies graph
+///
+/// 1. It ensures that a path contains at least one item
+/// 2. It provides pretty-printing `Display` implementation
+///
+/// # Examples
+/// ```
+/// let path = Path::new(vec![1, 2, 3]);
+/// assert_eq!(path.to_string(), "1 -> 2 -> 3");
+/// ```
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Path<I> {
     path: Vec<I>,
 }
 
 impl<I> Path<I> {
+    /// Create a new path. Panics if `path` is empty
     pub fn new(path: Vec<I>) -> Self {
+        assert!(!path.is_empty());
         Path { path }
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &I> {
-        self.path.iter()
     }
 }
 
 impl<I: ToOwned> Path<&I> {
+    /// Create a new path replacing every node with it's owned equivalent
     pub fn own_nodes(&self) -> Path<I::Owned> {
         self.iter().map(|&n| n.to_owned()).collect()
     }
@@ -129,13 +161,17 @@ impl<I> FromIterator<I> for Path<I> {
 impl<I: Display> Display for Path<I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut nodes = self.iter();
-        if let Some(node) = nodes.next() {
-            write!(f, "{}", node)?;
-        }
+        write!(f, "{}", nodes.next().unwrap())?;
         while let Some(node) = nodes.next() {
             write!(f, " -> {}", node)?;
         }
         Ok(())
+    }
+}
+
+impl<I> From<Path<I>> for Vec<I> {
+    fn from(path: Path<I>) -> Self {
+        path.path
     }
 }
 
@@ -144,12 +180,6 @@ impl<T> Deref for Path<T> {
 
     fn deref(&self) -> &Self::Target {
         &self.path
-    }
-}
-
-impl<T> DerefMut for Path<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.path
     }
 }
 
