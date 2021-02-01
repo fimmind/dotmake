@@ -50,7 +50,6 @@ macro_rules! parser_errors {
 }
 parser_errors! {
     serde_yaml::Error,
-    serde_lexpr::Error,
     serde_json::Error,
 }
 
@@ -69,7 +68,6 @@ impl Config {
         type Parser = &'static dyn Fn(&File) -> Result<Config, ConfigError>;
         let parsers = hashmap! {
             "yaml" => &Self::parse_yaml as Parser,
-            "lisp" => &Self::parse_lexpr as Parser,
             "json" => &Self::parse_json as Parser,
         };
 
@@ -84,11 +82,6 @@ impl Config {
 
     fn parse_yaml(file: &File) -> Result<Self, ConfigError> {
         Ok(serde_yaml::from_reader(file)?)
-    }
-
-    fn parse_lexpr(file: &File) -> Result<Self, ConfigError> {
-        let options = serde_lexpr::parse::Options::elisp();
-        Ok(serde_lexpr::from_reader_custom(file, options)?)
     }
 
     fn parse_json(file: &File) -> Result<Self, ConfigError> {
