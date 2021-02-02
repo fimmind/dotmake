@@ -185,24 +185,28 @@ impl<T> Deref for Path<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::DepsGraph;
+    use super::{DepsGraph, Path};
     use itertools::Itertools;
     use maplit::{hashmap, hashset};
     use std::collections::HashMap;
     use std::collections::HashSet;
 
+    /// Construct a new dependencies graph
+    fn deps_graph(graph: HashMap<i32, HashSet<i32>>) -> DepsGraph<i32> {
+        graph.into()
+    }
+
     /// Resolve a given graph starting with given roots and then assert that for
     /// every (node, dep) pair from that graph position(dep) < position(node)
     fn test_resolving(roots: &[i32], graph: &HashMap<i32, HashSet<i32>>) -> Vec<i32> {
-        let deps_graph: DepsGraph<i32> = graph.clone().into();
+        let deps_graph = deps_graph(graph.clone());
         let resolved = deps_graph.resolve(roots.iter().collect()).unwrap();
         println!("Resolved: {:?}", resolved);
 
         let positions: HashMap<_, _> = resolved.iter().map(|&&i| i).zip(0..).collect();
         for (node, deps) in graph {
             for dep in deps {
-                if let (Some(node_pos), Some(dep_pos)) = (positions.get(node), positions.get(dep))
-                {
+                if let (Some(node_pos), Some(dep_pos)) = (positions.get(node), positions.get(dep)) {
                     assert!(
                         dep_pos < node_pos,
                         "pos({0}) ≤ pos({1}), but {0} depends on {1}",
@@ -324,5 +328,95 @@ mod tests {
         assert_eq!(test_resolving(&[2], &deps_graph), vec![4, 3, 2]);
         assert_eq!(test_resolving(&[3], &deps_graph), vec![4, 3]);
         assert_eq!(test_resolving(&[4], &deps_graph), vec![4]);
+
+        let deps_graph = hashmap! {
+            1 => hashset!{2, 3},
+            2 => hashset!{3, 4},
+            4 => hashset!{5},
+        };
+        assert_eq!(5, test_resolving(&[1], &deps_graph).len());
+        assert_eq!(5, test_resolving(&[1, 3], &deps_graph).len());
+        assert_eq!(5, test_resolving(&[3, 1], &deps_graph).len());
+        assert_eq!(test_resolving(&[3], &deps_graph), vec![3]);
+
+        let deps_graph = hashmap! {
+            1 => hashset!{2, 3},
+            2 => hashset!{3, 4},
+            4 => hashset!{5},
+            7 => hashset!{2, 5}
+        };
+        assert_eq!(5, test_resolving(&[1], &deps_graph).len());
+        assert_eq!(6, test_resolving(&[1, 7], &deps_graph).len());
+        assert_eq!(5, test_resolving(&[7], &deps_graph).len());
+    }
+
+    /// Assert that a graph has a cycle and then return that cycle path
+    fn test_single_cycle(roots: &[i32], graph: &HashMap<i32, HashSet<i32>>) -> Vec<i32> {
+        let deps_graph = deps_graph(graph.clone());
+        let cycle_path: Path<i32> = deps_graph
+            .resolve(roots.iter().collect())
+            .unwrap_err()
+            .into();
+
+        println!("Found cycle: {}", cycle_path);
+        cycle_path.into()
+    }
+
+    #[test]
+    fn find_path() {
+        let graph = deps_graph(hashmap! {
+            1 => hashset!{2},
+        });
+        assert_eq!(graph.find_path(&1, &2), Some(Path::new(vec![&1, &2])));
+        assert_eq!(graph.find_path(&1, &1), None);
+
+        let graph = deps_graph(hashmap! {
+            1 => hashset!{2},
+            2 => hashset!{1},
+        });
+        assert_eq!(graph.find_path(&1, &1), Some(Path::new(vec![&1, &2, &1])));
+        assert_eq!(graph.find_path(&2, &2), Some(Path::new(vec![&2, &1, &2])));
+        assert_eq!(graph.find_path(&1, &2), Some(Path::new(vec![&1, &2])));
+        assert_eq!(graph.find_path(&2, &1), Some(Path::new(vec![&2, &1])));
+
+        let graph = deps_graph(hashmap! {
+            1 => hashset!{2, 4},
+            2 => hashset!{3},
+            3 => hashset!{5},
+            4 => hashset!{3, 5},
+            5 => hashset!{2},
+            6 => hashset!{2, 3},
+        });
+        assert_eq!(
+            graph.find_path(&1, &2),
+            Some(Path::new(vec![&1, &3, &5, &2]))
+        );
+        assert_eq!(
+            graph.find_path(&1, &2),
+            Some(Path::new(vec![&1, &3, &5, &2]))
+        );
+        assert_eq!(
+            graph.find_path(&3, &3),
+            Some(Path::new(vec![&3, &5, &2, &3]))
+        );
+        assert_eq!(
+            graph.find_path(&3, &3),
+            Some(Path::new(vec![&3, &5, &2, &3]))
+        );
+        assert_eq!(
+            graph.find_path(&5, &5),
+            Some(Path::new(vec![&5, &2, &3, &5]))
+        );
+        assert_eq!(graph.find_path(&1, &6), None);
+        assert_eq!(graph.find_path(&6, &4), None);
+    }
+
+    #[test]
+    fn display_path() {
+        let path = Path::new(vec![1]);
+        assert_eq!(path.to_string(), "1");
+
+        let path = Path::new(vec![1, 2, 3]);
+        assert_eq!(path.to_string(), "1 -> 2 -> 3");
     }
 }
