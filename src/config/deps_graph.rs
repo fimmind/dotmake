@@ -13,7 +13,7 @@
 //! assert_eq!(graph.resolve(roots), Ok(vec![&5, &4, &3, &2, &1]));
 //! ```
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -81,8 +81,34 @@ impl<I: Hash + Eq + Debug + Display + Clone> DepsGraph<I> {
     ///
     /// First and last elements of the resulting vector are always `start` and
     /// `dest` respectively
-    fn find_path(&self, start: &I, dest: &I) -> Option<Path<&I>> {
-        todo!("DepsGraph::find_path")
+    ///
+    /// if `start == dest`, then this method tries to find a cyclic path from
+    /// start to start
+    fn find_path<'a>(&'a self, start: &'a I, dest: &'a I) -> Option<Path<&'a I>> {
+        let mut parents = HashMap::<&I, &I>::new();
+        let mut queue = VecDeque::from(vec![start]);
+        while let Some(node) = queue.pop_front() {
+            if !parents.is_empty() && node == dest {
+                let mut res = vec![dest];
+                let mut node = parents[dest];
+                while node != start {
+                    res.push(node);
+                    node = parents[node];
+                }
+                res.push(start);
+                res.reverse();
+                return Some(Path::new(res));
+            }
+            self.graph.get(node).map(|deps| {
+                for dep in deps {
+                    parents.entry(dep).or_insert_with(|| {
+                        queue.push_front(dep);
+                        node
+                    });
+                }
+            });
+        }
+        None
     }
 }
 
@@ -395,17 +421,13 @@ mod tests {
         assert_eq!(graph.find_path(&2, &1), Some(Path::new(vec![&2, &1])));
 
         let graph = deps_graph(hashmap! {
-            1 => hashset!{2, 4},
+            1 => hashset!{3, 4},
             2 => hashset!{3},
             3 => hashset!{5},
-            4 => hashset!{3, 5},
+            4 => hashset!{3},
             5 => hashset!{2},
             6 => hashset!{2, 3},
         });
-        assert_eq!(
-            graph.find_path(&1, &2),
-            Some(Path::new(vec![&1, &3, &5, &2]))
-        );
         assert_eq!(
             graph.find_path(&1, &2),
             Some(Path::new(vec![&1, &3, &5, &2]))
