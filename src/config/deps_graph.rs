@@ -1,3 +1,18 @@
+//! Dependencies graph abstranction
+//!
+//! # Examples
+//! ```
+//! let graph: DepsGraph<_> = hashmap! {
+//!     1 => hashset!{2, 3},
+//!     2 => hashset!{3, 4},
+//!     3 => hashset!{4},
+//!     4 => hashset!{5},
+//!     7 => hashset!{1, 2, 5}
+//! }.into();
+//! let roots = vec![&1];
+//! assert_eq!(graph.resolve(roots), Ok(vec![&5, &4, &3, &2, &1]));
+//! ```
+
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::{Debug, Display};
