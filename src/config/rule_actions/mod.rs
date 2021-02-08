@@ -59,11 +59,13 @@ enum RuleAction {
 
 /// General action trait
 trait Action {
-    /// Perform the action
-    fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>>;
+    /// Perform the action. Does nothing by default
+    fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
+        Ok(())
+    }
 
     /// Get action's dependencies, i.e. other rules that have to be installed
-    /// before the rule that contains that action
+    /// before the rule that contains that action. Returns an empty set by default
     fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
         HashSet::new()
     }
