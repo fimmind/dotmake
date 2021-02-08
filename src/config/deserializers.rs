@@ -1,3 +1,5 @@
+//! General structures providing custom `Deserialize` implementation
+
 use std::ops::{Deref, DerefMut};
 
 /// A helper for deserializing `List` as either a sequence or a singletone
@@ -18,18 +20,11 @@ impl<T> ListEnum<T> {
 }
 
 /// Deserialize a vector, but instead of only accepting a sequence of items, it
-/// also accepts a single value, witch is treated as a singletone sequence
-/// containing this value
+/// also accepts a single value, witch is treated as a singleton
 #[derive(Debug, Deserialize)]
 #[serde(from = "ListEnum<T>")]
 pub struct List<T> {
     elems: Vec<T>,
-}
-
-impl<T> List<T> {
-    fn new() -> Self {
-        List::default()
-    }
 }
 
 impl<T> From<ListEnum<T>> for List<T> {
@@ -46,6 +41,12 @@ impl<T> From<Vec<T>> for List<T> {
     }
 }
 
+impl<T> From<List<T>> for Vec<T> {
+    fn from(list: List<T>) -> Self {
+        list.elems
+    }
+}
+
 impl<T> Deref for List<T> {
     type Target = Vec<T>;
 
@@ -57,12 +58,6 @@ impl<T> Deref for List<T> {
 impl<T> DerefMut for List<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.elems
-    }
-}
-
-impl<T> From<List<T>> for Vec<T> {
-    fn from(list: List<T>) -> Self {
-        list.elems
     }
 }
 
