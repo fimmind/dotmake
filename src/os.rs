@@ -1,7 +1,7 @@
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::{self, prelude::*, BufReader};
-use std::os::unix::fs::symlink as unix_symlink;
+use std::os::unix;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use thiserror::Error;
@@ -16,11 +16,11 @@ pub enum OSError {
     },
 
     #[error(
-        "Process exited with {}",
-        .code.map(|code| format!("shell code {}", code))
-             .unwrap_or("error".to_string())
+        "Process {}",
+        .code.map(|code| format!("exited with status code {}", code))
+             .unwrap_or("terminated by a signal".to_string())
     )]
-    ExitError { code: Option<i32> },
+    BadExitStatus { code: Option<i32> },
 
     #[error("Failed to obtain file name of `{0}`")]
     NoFileName(PathBuf),
@@ -75,7 +75,7 @@ pub fn remove_file(file: impl AsRef<Path>) -> Result<(), OSError> {
 pub fn symlink(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(), OSError> {
     let source = source.as_ref();
     let dest = dest.as_ref();
-    unix_symlink(source, dest).map_err(|err| OSError::IO {
+    unix::fs::symlink(source, dest).map_err(|err| OSError::IO {
         msg: format!(
             "Failed to crate symlink `{}` -> `{}`",
             source.display(),
@@ -131,7 +131,7 @@ pub fn run_shell_script(shell: &str, dir: impl AsRef<Path>, script: &str) -> Res
 
     let exit_status = shell.wait().map_err(shell_err)?;
     if !exit_status.success() {
-        Err(OSError::ExitError {
+        Err(OSError::BadExitStatus {
             code: exit_status.code(),
         })?;
     }
