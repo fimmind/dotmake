@@ -1,3 +1,5 @@
+//! Actions that perform given shell scripts
+
 use super::{Action, RuleActionsConf};
 use crate::cli::OPTIONS;
 use crate::config::deserializers::List;

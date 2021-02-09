@@ -1,3 +1,5 @@
+//! An action that only specifies dependencies
+
 use super::{Action, RuleActionsConf};
 use crate::identifier::{Identifier, Identifiers};
 use std::collections::HashSet;

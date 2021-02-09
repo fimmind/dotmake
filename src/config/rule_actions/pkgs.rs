@@ -1,3 +1,5 @@
+//! An action that installes packages using preconfigured package managers
+
 use super::{Action, RuleActionsConf};
 use crate::cli::OPTIONS;
 use crate::config::deserializers::List;
