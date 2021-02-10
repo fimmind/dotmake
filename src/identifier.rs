@@ -1,14 +1,18 @@
+//! General identifier type
+
 use serde::de::{self, Deserialize, Deserializer, Error};
 use std::fmt;
 use std::ops::Deref;
 use std::str;
 
-/// Represents a string containing no whitespace
+/// A structure representing a string containing no whitespace
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Identifier(String);
 
 impl Identifier {
     /// Creates new identifier with a given `name`.
+    ///
+    /// # Errors
     /// Return `Err(name)` if there is any whitespace in `name`
     pub fn new(name: String) -> Result<Self, String> {
         if name.chars().any(|ch| ch.is_whitespace()) {
@@ -28,10 +32,9 @@ impl<'de> Deserialize<'de> for Identifier {
             Err(Error::invalid_value(
                 de::Unexpected::Str(&name),
                 &"a string without whitespace",
-            ))
-        } else {
-            Ok(Identifier(name))
+            ))?;
         }
+        Ok(Identifier(name))
     }
 }
 
@@ -56,7 +59,7 @@ impl str::FromStr for Identifier {
     }
 }
 
-/// Repressents a list of identifers separeted with a whitespace
+/// A structure representing a list of identifers separeted with whitespace
 #[derive(Debug, Deserialize)]
 pub struct Identifiers(String);
 
