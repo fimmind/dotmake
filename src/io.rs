@@ -44,16 +44,6 @@ macro_rules! exit_error {
 }
 
 #[macro_export]
-macro_rules! exit_error_fn {
-    () => {
-        |err| exit_error!("{}", err)
-    };
-    ($($fmt_args:expr),+) => {
-        |err| exit_error!("{}: {}", format!($($fmt_args),+), err)
-    };
-}
-
-#[macro_export]
 macro_rules! print_error {
     ($($fmt_args:expr),+) => {{
         use $crate::io::*;
@@ -83,11 +73,14 @@ pub fn confirm(prompt: &str, default: bool) -> bool {
     if OPTIONS.noconfirm() {
         default
     } else {
-        Confirm::with_theme(&ColorfulTheme::default())
+        let res = Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(prompt)
             .default(default)
-            .interact()
-            .unwrap_or_else(exit_error_fn!("Failed to perform input"))
+            .interact();
+        match res {
+            Err(err) => exit_error!("Failed to perform input: {}", err),
+            Ok(val) => val,
+        }
     }
 }
 
