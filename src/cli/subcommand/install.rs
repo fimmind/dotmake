@@ -14,6 +14,10 @@ pub struct Install {
 impl Install {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
         let config = Config::init()?;
+        for rule in &self.rules {
+            config.try_get_rule(rule)?;
+        }
+
         let graph = config.get_deps_graph()?;
         let resolved = graph.resolve(self.rules.iter().collect())?;
         for ident in resolved {
