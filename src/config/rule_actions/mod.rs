@@ -145,7 +145,7 @@ impl RuleActions {
     /// - index is out of range (i.e. less then 1 or bigger then the total
     /// number of action)
     /// - the action fails to perform
-    pub fn peform_nth(&self, n: usize, conf: &RuleActionsConf) -> Result<(), RuleActionsError> {
+    pub fn perform_nth(&self, n: usize, conf: &RuleActionsConf) -> Result<(), RuleActionsError> {
         if n == 0 {
             return Err(RuleActionsError::IndexOutOfRange);
         }
