@@ -1,4 +1,4 @@
-//! Config abstraction that handles parsing and interations with config file
+//! Config abstraction that handles parsing and interactions with config file
 
 mod deps_graph;
 mod deserializers;
