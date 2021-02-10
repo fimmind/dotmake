@@ -1,11 +1,11 @@
+//! Various helper functions and macros for simple, pretty and unified I/O
+
 use crate::cli::OPTIONS;
 use colored::*;
 use dialoguer::{theme::ColorfulTheme, Confirm};
-use std::fmt::{self, Display};
 use std::str;
 
-// OUTPUT
-// ------
+/// Supported massage types
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum MessageType {
     Info,
@@ -13,18 +13,20 @@ pub enum MessageType {
     Error,
 }
 
-impl Display for MessageType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl MessageType {
+    /// Get message prefix for a given message type
+    fn prefix(&self) -> ColoredString {
         match self {
-            MessageType::Info => write!(f, "{} ", "info:".bright_black()),
-            MessageType::Warning => write!(f, "{} ", "warning:".yellow().bold()),
-            MessageType::Error => write!(f, "{} ", "error:".red().bold()),
+            MessageType::Info => "info:".bright_black(),
+            MessageType::Warning => "warning:".yellow().bold(),
+            MessageType::Error => "error:".red().bold(),
         }
     }
 }
 
+/// Print a message of a given type to stderr
 pub fn print_msg(msg: impl Into<String>, msg_type: MessageType) {
-    eprint!("{}", msg_type);
+    eprint!("{} ", msg_type.prefix());
 
     let mut msg = msg.into();
     textwrap::fill_inplace(&mut msg, 80);
@@ -35,6 +37,7 @@ pub fn print_msg(msg: impl Into<String>, msg_type: MessageType) {
     }
 }
 
+/// Print error message to stderr and exit with status code 1
 #[macro_export]
 macro_rules! exit_error {
     ($($fmt_args:expr),+) => {{
@@ -43,6 +46,7 @@ macro_rules! exit_error {
     }};
 }
 
+/// Print error message to stderr
 #[macro_export]
 macro_rules! print_error {
     ($($fmt_args:expr),+) => {{
@@ -51,6 +55,7 @@ macro_rules! print_error {
     }};
 }
 
+/// Print warning message to stderr
 #[macro_export]
 macro_rules! print_warn {
     ($($fmt_args:expr),+) => {{
@@ -59,6 +64,7 @@ macro_rules! print_warn {
     }};
 }
 
+/// Waring info message to stderr
 #[macro_export]
 macro_rules! print_info {
     ($($fmt_args:expr),+) => {{
@@ -67,23 +73,27 @@ macro_rules! print_info {
     }};
 }
 
-// INPUT
-// -----
+/// Confirmation prompt rendered at stderr
+///
+/// If noconfirm option is set by the user, `default` is returned without of any
+/// prompt being displayed
 pub fn confirm(prompt: &str, default: bool) -> bool {
     if OPTIONS.noconfirm() {
         default
     } else {
-        let res = Confirm::with_theme(&ColorfulTheme::default())
+        Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(prompt)
             .default(default)
-            .interact();
-        match res {
-            Err(err) => exit_error!("Failed to perform input: {}", err),
-            Ok(val) => val,
-        }
+            .interact()
+            .unwrap()
     }
 }
 
+/// Confirmation prompt rendered at stderr
+///
+/// See [`confirm`] function for more details
+///
+/// [`confirm`]: io/fn.confirm.html
 #[macro_export]
 macro_rules! confirm {
     ($($format_arg: expr),*; $default: expr) => {
