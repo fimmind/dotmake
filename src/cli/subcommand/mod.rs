@@ -1,3 +1,5 @@
+//! StructOpt's subcommand scructure
+
 mod add;
 mod completion;
 mod exec;
@@ -11,6 +13,11 @@ use completion::Completion;
 use exec::Exec;
 use install::Install;
 
+/// All the subcommand supported by the application
+///
+/// They should be used with structopt's [`subcommand`] attribute
+///
+/// [`subcommand`]: https://docs.rs/structopt/#subcommands
 #[derive(Debug, StructOpt)]
 pub enum Subcommand {
     Install(Install),
@@ -20,6 +27,7 @@ pub enum Subcommand {
 }
 
 impl Subcommand {
+    /// Run the subcommand
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
         match self {
             Subcommand::Install(sub) => sub.perform(),

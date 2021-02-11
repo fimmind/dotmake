@@ -1,3 +1,5 @@
+//! Subcommand that fully performes given rules
+
 use crate::config::Config;
 use crate::identifier::Identifier;
 use std::error::Error;

@@ -1,3 +1,5 @@
+//! Subcommand that generates completion script for various shells
+
 use crate::cli::Cli;
 use std::env;
 use std::error::Error;

@@ -1,3 +1,6 @@
+//! Subcommand that moves a given file to Dotifiles direcotry and crates a
+//! symlink instead
+
 use crate::cli::OPTIONS;
 use crate::os::{get_file_name, move_file, symlink};
 use std::error::Error;
