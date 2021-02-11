@@ -11,7 +11,7 @@ pub struct Deps {
 }
 
 impl Action for Deps {
-    fn get_deps(&self, conf: &RuleActionsConf) -> HashSet<Identifier> {
+    fn get_deps(&self, _conf: &RuleActionsConf) -> HashSet<Identifier> {
         self.deps.into_iter().collect()
     }
 }

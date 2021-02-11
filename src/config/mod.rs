@@ -155,11 +155,6 @@ pub enum RuleError {
 }
 
 impl<'a> Rule<'a> {
-    /// Get rule's identifier
-    pub fn ident(&self) -> &'a Identifier {
-        self.ident
-    }
-
     /// Get rule's dependencies
     pub fn get_deps(&self) -> HashSet<Identifier> {
         self.actions.get_deps(&self.actions_conf)
