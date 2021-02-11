@@ -404,6 +404,62 @@ mod tests {
     }
 
     #[test]
+    fn single_cycle() {
+        let graph = hashmap! {
+            1 => hashset! {1},
+        };
+        assert_eq!(&test_single_cycle(&[1], &graph), &[1, 1]);
+        println!();
+
+        let graph = hashmap! {
+            1 => hashset!{2},
+            2 => hashset!{1},
+        };
+        assert_eq!(&test_single_cycle(&[1], &graph), &[1, 2, 1]);
+        assert_eq!(&test_single_cycle(&[2], &graph), &[2, 1, 2]);
+        test_single_cycle(&[1, 2], &graph);
+        println!();
+
+        let graph = hashmap! {
+            1 => hashset!{2, 3},
+            2 => hashset!{1},
+            3 => hashset!{2},
+        };
+        assert_eq!(&test_single_cycle(&[1], &graph), &[1, 2, 1]);
+        assert_eq!(&test_single_cycle(&[2], &graph), &[2, 1, 2]);
+        test_single_cycle(&[3], &graph);
+        println!();
+
+        let graph = hashmap! {
+            1 => hashset!{2},
+            2 => hashset!{3},
+            3 => hashset!{1},
+        };
+        assert_eq!(&test_single_cycle(&[1], &graph), &[1, 2, 3, 1]);
+        assert_eq!(&test_single_cycle(&[2], &graph), &[2, 3, 1, 2]);
+        assert_eq!(&test_single_cycle(&[3], &graph), &[3, 1, 2, 3]);
+        test_single_cycle(&[1, 2], &graph);
+        test_single_cycle(&[2, 3], &graph);
+        test_single_cycle(&[1, 3], &graph);
+        test_single_cycle(&[1, 2, 3], &graph);
+        println!();
+
+        let graph = hashmap! {
+            1 => hashset!{2},
+            2 => hashset!{3, 4},
+            3 => hashset!{4},
+            4 => hashset!{1, 5, 6},
+            5 => hashset!{6, 7},
+            6 => hashset!{7},
+        };
+        assert_eq!(&test_single_cycle(&[1], &graph), &[1, 2, 4, 1]);
+        assert_eq!(&test_single_cycle(&[2], &graph), &[2, 4, 1, 2]);
+        assert_eq!(&test_single_cycle(&[4], &graph), &[4, 1, 2, 4]);
+        assert_eq!(&test_resolving(&[5], &graph), &[7, 6, 5]);
+        test_single_cycle(&[3], &graph);
+    }
+
+    #[test]
     fn find_path() {
         let graph = deps_graph(hashmap! {
             1 => hashset!{2},
