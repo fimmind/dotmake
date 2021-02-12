@@ -1,6 +1,7 @@
 //! Various functions providing more convenient way of interacting with OS and
 //! it's file system
 
+use once_cell::sync::OnceCell;
 use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::{self, prelude::*, BufReader};
@@ -99,7 +100,6 @@ pub fn move_file(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(),
     })
 }
 
-
 /// A wrapper aroung [`std::fs::remove_file`] providing more informative error
 /// messages
 pub fn remove_file(file: impl AsRef<Path>) -> Result<(), OSError> {
@@ -148,17 +148,24 @@ pub fn read_file(
     }))
 }
 
+/// Cache for [`get_distro_id`]
+static DISTRO_ID: OnceCell<String> = OnceCell::new();
+
 /// Read `ID` field of `/etc/os-release`
 ///
 /// If the field is not set, "linux" is returned
-pub fn get_distro_id() -> Result<String, OSError> {
-    for line in read_file("/etc/os-release")? {
-        let line = line?;
-        if line.starts_with("ID=") {
-            return Ok(line[3..].trim().to_string());
-        }
-    }
-    Ok("linux".to_string())
+pub fn get_distro_id() -> Result<&'static str, OSError> {
+    DISTRO_ID
+        .get_or_try_init(|| {
+            for line in read_file("/etc/os-release")? {
+                let line = line?;
+                if line.starts_with("ID=") {
+                    return Ok(line[3..].trim().to_string());
+                }
+            }
+            Ok("linux".to_string())
+        })
+        .map(|i| i.as_str())
 }
 
 /// Run shell scrip in the given directory
