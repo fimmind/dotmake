@@ -148,24 +148,22 @@ pub fn read_file(
     }))
 }
 
-/// Cache for [`get_distro_id`]
+/// Cache for [`distro_id`]
 static DISTRO_ID: OnceCell<String> = OnceCell::new();
 
 /// Read `ID` field of `/etc/os-release`
 ///
 /// If the field is not set, "linux" is returned
-pub fn get_distro_id() -> Result<&'static str, OSError> {
-    DISTRO_ID
-        .get_or_try_init(|| {
-            for line in read_file("/etc/os-release")? {
-                let line = line?;
-                if line.starts_with("ID=") {
-                    return Ok(line[3..].trim().to_string());
-                }
+pub fn distro_id() -> Result<&'static str, OSError> {
+    Ok(DISTRO_ID.get_or_try_init(|| {
+        for line in read_file("/etc/os-release")? {
+            let line = line?;
+            if line.starts_with("ID=") {
+                return Ok(line[3..].trim().to_string());
             }
-            Ok("linux".to_string())
-        })
-        .map(|i| i.as_str())
+        }
+        Ok("linux".to_string())
+    })?)
 }
 
 /// Run shell scrip in the given directory

@@ -40,11 +40,11 @@ impl Options {
     /// Getter for linux distro identifier
     ///
     /// If linux distro isn't specified by the user, it's determined using
-    /// [`crate::os::get_distro_id`]
+    /// [`crate::os::distro_id`]
     pub fn distro_id(&self) -> Result<&str, OSError> {
         match &self.distro_id {
             Some(id) => Ok(id),
-            None => os::get_distro_id(),
+            None => os::distro_id(),
         }
     }
 }
