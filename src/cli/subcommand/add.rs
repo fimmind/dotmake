@@ -32,6 +32,7 @@ impl Add {
         if dest.exists() {
             print_warn!("File `{}` already exists", dest.display());
             if !confirm!("Replace it?"; true) {
+                print_info!("Aborting...");
                 return Ok(());
             }
             print_info!("Replacing `{}` with a newly added file", dest.display());
@@ -40,12 +41,13 @@ impl Add {
         }
         move_file(&self.file, &dest)?;
 
+        let dest = dest.canonicalize()?;
         print_info!(
             "Creating symlink `{}` -> `{}`",
             self.file.display(),
             dest.display()
         );
-        symlink(dest.canonicalize()?, &self.file)?;
+        symlink(dest, &self.file)?;
         Ok(())
     }
 }
