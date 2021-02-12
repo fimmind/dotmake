@@ -24,7 +24,7 @@ impl Add {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
         let dest = OPTIONS
             .dotfiles_dir()
-            .with_file_name(match &self.with_name {
+            .join(match &self.with_name {
                 Some(name) => name,
                 None => get_file_name(&self.file)?,
             });
