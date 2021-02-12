@@ -20,9 +20,8 @@ lazy_static! {
     pub static ref SUBCOMMAND: &'static Subcommand = &CLI.subcommand;
 }
 
-// This doc comment is for StructOpt
-/// Dotfiles installation manager
 #[derive(Debug, StructOpt)]
+#[structopt(about = "Dotfiles installation manager")]
 pub struct Cli {
     #[structopt(flatten)]
     options: Options,
@@ -31,7 +30,6 @@ pub struct Cli {
     subcommand: Subcommand,
 }
 
-/// CLI Options
 #[derive(Debug, StructOpt)]
 pub struct Options {
     /// Set a custom dotfiles directory

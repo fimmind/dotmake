@@ -13,11 +13,6 @@ use completion::Completion;
 use exec::Exec;
 use install::Install;
 
-/// All the subcommand supported by the application
-///
-/// They should be used with structopt's [`subcommand`] attribute
-///
-/// [`subcommand`]: https://docs.rs/structopt/#subcommands
 #[derive(Debug, StructOpt)]
 pub enum Subcommand {
     Install(Install),
