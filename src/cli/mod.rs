@@ -3,23 +3,26 @@
 mod options;
 mod subcommand;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use structopt::StructOpt;
 
 use options::Options;
 use subcommand::Subcommand;
 
-lazy_static! {
-    /// Lazily parsed CLI arguments
-    static ref CLI: Cli = Cli::from_args();
+/// Lazily parsed CLI
+static CLI: Lazy<Cli> = Lazy::new(Cli::from_args);
 
-    /// Lazily parsed CLI options
-    pub static ref OPTIONS: &'static Options = &CLI.options;
-
-    /// Lazily parsed CLI subcommand
-    pub static ref SUBCOMMAND: &'static Subcommand = &CLI.subcommand;
+/// Get lazily parsed CLI options
+pub fn options() -> &'static Options {
+    &CLI.options
 }
 
+/// Get lazily parsed CLI subcommand
+pub fn subcommand() -> &'static Subcommand {
+    &CLI.subcommand
+}
+
+/// Simple wrapper joining [`Options`] and [`Subcommand`]
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Dotfiles installation manager")]
 pub struct Cli {

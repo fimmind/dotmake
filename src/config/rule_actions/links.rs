@@ -1,7 +1,7 @@
 //! An action that creates soft links to actions dotfiles
 
 use super::{Action, RuleActionsConf};
-use crate::cli::OPTIONS;
+use crate::cli;
 use crate::config::deserializers::List;
 use crate::os::{self, OSError};
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ pub struct Links {
 
 impl Action for Links {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
-        set_current_dir(OPTIONS.dotfiles_dir())?;
+        set_current_dir(cli::options().dotfiles_dir())?;
         for (source, dests) in &self.links {
             for dest in dests.iter() {
                 if dest.exists() {

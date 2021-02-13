@@ -1,6 +1,6 @@
 //! Various helper functions and macros for simple, pretty and unified I/O
 
-use crate::cli::OPTIONS;
+use crate::cli;
 use colored::*;
 use dialoguer::{theme::ColorfulTheme, Confirm};
 use std::str;
@@ -78,7 +78,7 @@ macro_rules! print_info {
 /// If noconfirm option is set by the user, `default` is returned without of any
 /// prompt being displayed
 pub fn confirm(prompt: &str, default: bool) -> bool {
-    if OPTIONS.noconfirm() {
+    if cli::options().noconfirm() {
         default
     } else {
         Confirm::with_theme(&ColorfulTheme::default())

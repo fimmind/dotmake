@@ -18,7 +18,7 @@ mod identifier;
 mod os;
 
 fn main() {
-    if let Err(err) = cli::SUBCOMMAND.perform() {
+    if let Err(err) = cli::subcommand().perform() {
         exit_error!("{}", err);
     }
 }

@@ -1,7 +1,7 @@
 //! Actions that perform given shell scripts
 
 use super::{Action, RuleActionsConf};
-use crate::cli::OPTIONS;
+use crate::cli;
 use crate::config::deserializers::List;
 use crate::os::run_shell_script;
 use std::error::Error;
@@ -17,7 +17,7 @@ impl Action for ShellScript {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         Ok(run_shell_script(
             &conf.shell,
-            OPTIONS.dotfiles_dir(),
+            cli::options().dotfiles_dir(),
             &self.script.join("\n"),
         )?)
     }

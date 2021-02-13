@@ -1,11 +1,11 @@
 //! An action that installes packages using preconfigured package managers
 
 use super::{Action, RuleActionsConf};
-use crate::cli::OPTIONS;
+use crate::cli;
 use crate::config::deserializers::List;
 use crate::identifier::{Identifier, Identifiers};
 use crate::os::run_shell_script;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
@@ -29,11 +29,9 @@ pub enum PkgsError {
     UndefinedPkgMngr(Identifier),
 }
 
-lazy_static! {
-    static ref PKG_RE: Regex = Regex::new(r"%(%|pkg)").unwrap();
-}
 impl Pkgs {
     fn substitude_pkg<'a>(s: &'a str, pkg: &str) -> Cow<'a, str> {
+        static PKG_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"%(%|pkg)").unwrap());
         PKG_RE.replace_all(s, |caps: &Captures| match &caps[1] {
             "%" => "%",
             "pkg" => pkg,
@@ -52,7 +50,7 @@ impl Action for Pkgs {
             for pkg in pkgs.iter() {
                 run_shell_script(
                     &conf.shell,
-                    OPTIONS.dotfiles_dir(),
+                    cli::options().dotfiles_dir(),
                     &Self::substitude_pkg(pkg_mngr_cmd, pkg),
                 )?;
             }

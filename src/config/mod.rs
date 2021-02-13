@@ -4,7 +4,7 @@ mod deps_graph;
 mod deserializers;
 mod rule_actions;
 
-use crate::cli::OPTIONS;
+use crate::cli;
 use crate::identifier::Identifier;
 use crate::os::{self, OSError};
 use deps_graph::DepsGraph;
@@ -66,8 +66,8 @@ impl Config {
     /// Get path (without an extension) where config file is expected to be
     /// found
     fn base_path() -> Result<PathBuf, ConfigError> {
-        let dot_dir = OPTIONS.dotfiles_dir();
-        let distro_id = OPTIONS.distro_id()?;
+        let dot_dir = cli::options().dotfiles_dir();
+        let distro_id = cli::options().distro_id()?;
         Ok(dot_dir.join(format!("dotm-{}", distro_id)))
     }
 

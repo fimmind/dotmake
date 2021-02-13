@@ -1,7 +1,7 @@
 //! Subcommand that moves a given file to Dotifiles direcotry and crates a
 //! symlink instead
 
-use crate::cli::OPTIONS;
+use crate::cli;
 use crate::os::{get_file_name, move_file, symlink};
 use std::error::Error;
 use std::ffi::OsString;
@@ -22,7 +22,7 @@ pub struct Add {
 
 impl Add {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let dest = OPTIONS
+        let dest = cli::options()
             .dotfiles_dir()
             .join(match &self.with_name {
                 Some(name) => name,
