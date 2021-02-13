@@ -148,13 +148,11 @@ pub fn read_file(
     }))
 }
 
-/// Cache for [`distro_id`]
-static DISTRO_ID: OnceCell<String> = OnceCell::new();
-
 /// Read `ID` field of `/etc/os-release`
 ///
 /// If the field is not set, "linux" is returned
 pub fn distro_id() -> Result<&'static str, OSError> {
+    static DISTRO_ID: OnceCell<String> = OnceCell::new();
     Ok(DISTRO_ID.get_or_try_init(|| {
         for line in read_file("/etc/os-release")? {
             let line = line?;
