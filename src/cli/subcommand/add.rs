@@ -22,12 +22,10 @@ pub struct Add {
 
 impl Add {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let dest = cli::options()
-            .dotfiles_dir()
-            .join(match &self.with_name {
-                Some(name) => name,
-                None => get_file_name(&self.file)?,
-            });
+        let dest = cli::options().dotfiles_dir().join(match &self.with_name {
+            Some(name) => name,
+            None => get_file_name(&self.file)?,
+        });
 
         if dest.exists() {
             print_warn!("File `{}` already exists", dest.display());
