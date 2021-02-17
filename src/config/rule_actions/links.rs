@@ -20,6 +20,7 @@ impl Action for Links {
     fn perform(&self, conf: &RuleActionsConf) -> Result<(), Box<dyn Error>> {
         set_current_dir(cli::options().dotfiles_dir())?;
         for (source, dests) in &self.links {
+            let source = source.canonicalize()?;
             for dest in dests.iter() {
                 if dest.exists() {
                     if os::is_symlink(dest)? {
@@ -28,7 +29,7 @@ impl Action for Links {
                         backup(dest, &conf.backup_dir)?;
                     }
                 }
-                os::symlink(source, dest)?;
+                os::symlink(&source, dest)?;
             }
         }
         Ok(())
