@@ -115,6 +115,7 @@ pub fn remove_file(file: impl AsRef<Path>) -> Result<(), OSError> {
 pub fn symlink(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(), OSError> {
     let source = source.as_ref();
     let dest = dest.as_ref();
+    ensure_parent_dir(dest)?;
     unix::fs::symlink(source, dest).map_err(|err| OSError::IO {
         msg: format!(
             "Failed to crate symlink `{}` -> `{}`",
@@ -123,6 +124,15 @@ pub fn symlink(source: impl AsRef<Path>, dest: impl AsRef<Path>) -> Result<(), O
         ),
         err,
     })
+}
+
+/// Ensure that `path`'s parent directory exists and is a directory
+pub fn ensure_parent_dir(path: impl AsRef<Path>) -> Result<(), OSError> {
+    let path = path.as_ref();
+    if let Some(parent) = path.parent() {
+        ensure_dir_exists(parent)?;
+    }
+    Ok(())
 }
 
 /// Open file
