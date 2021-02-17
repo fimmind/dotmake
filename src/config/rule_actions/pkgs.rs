@@ -3,7 +3,7 @@
 use super::{Action, RuleActionsConf};
 use crate::cli;
 use crate::config::deserializers::List;
-use crate::identifier::{Identifier, Identifiers};
+use crate::types::{Identifier, Identifiers};
 use crate::os::run_shell_script;
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};

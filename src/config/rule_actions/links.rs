@@ -3,6 +3,7 @@
 use super::{Action, RuleActionsConf};
 use crate::cli;
 use crate::config::deserializers::List;
+use crate::types::UserPath;
 use crate::os::{self, OSError};
 use std::collections::HashMap;
 use std::env::set_current_dir;
@@ -12,7 +13,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct Links {
-    links: HashMap<PathBuf, List<PathBuf>>,
+    links: HashMap<UserPath, List<UserPath>>,
 }
 
 impl Action for Links {

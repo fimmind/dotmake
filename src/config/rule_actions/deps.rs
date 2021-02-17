@@ -1,7 +1,7 @@
 //! An action that only specifies dependencies
 
 use super::{Action, RuleActionsConf};
-use crate::identifier::{Identifier, Identifiers};
+use crate::types::{Identifier, Identifiers};
 use std::collections::HashSet;
 
 #[derive(Debug, Deserialize)]

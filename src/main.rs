@@ -14,7 +14,7 @@ extern crate serde;
 mod io;
 mod cli;
 mod config;
-mod identifier;
+mod types;
 mod os;
 
 fn main() {

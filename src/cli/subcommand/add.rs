@@ -1,11 +1,11 @@
 //! Subcommand that moves a given file to Dotifiles direcotry and crates a
 //! symlink instead
 
+use crate::types::UserPath;
 use crate::cli;
 use crate::os::{get_file_name, move_file, symlink};
 use std::error::Error;
 use std::ffi::OsString;
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 /// Move a file to dotfiles directory, replacing it with a symlink
@@ -13,7 +13,7 @@ use structopt::StructOpt;
 pub struct Add {
     /// A file to move to your dotfiles
     #[structopt(required = true)]
-    file: PathBuf,
+    file: UserPath,
 
     /// Store the file with a given name in the dotfiles directory
     #[structopt(long = "with_name", short = "o")]

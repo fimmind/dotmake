@@ -1,7 +1,7 @@
 //! Subcommand that performs specified action of a rule
 
 use crate::config::Config;
-use crate::identifier::Identifier;
+use crate::types::Identifier;
 use std::error::Error;
 use structopt::StructOpt;
 

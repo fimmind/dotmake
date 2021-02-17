@@ -5,10 +5,10 @@ mod links;
 mod pkgs;
 mod shell_script;
 
-use crate::identifier::Identifier;
+use crate::types::UserPath;
+use crate::types::Identifier;
 use std::collections::HashSet;
 use std::error::Error;
-use std::path::PathBuf;
 use thiserror::Error;
 
 use deps::Deps;
@@ -31,7 +31,7 @@ pub enum RuleActionsError {
 #[derive(Debug, Deserialize)]
 pub struct RuleActionsConf {
     shell: String,
-    backup_dir: PathBuf,
+    backup_dir: UserPath,
     pkg_managers: PkgManagersConf,
 }
 

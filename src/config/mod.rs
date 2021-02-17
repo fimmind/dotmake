@@ -5,7 +5,7 @@ mod deserializers;
 mod rule_actions;
 
 use crate::cli;
-use crate::identifier::Identifier;
+use crate::types::Identifier;
 use crate::os::{self, OSError};
 use deps_graph::DepsGraph;
 use maplit::hashmap;

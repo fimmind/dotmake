@@ -1,7 +1,8 @@
 //! CLI options
 
 use crate::os::{self, OSError};
-use std::path::PathBuf;
+use crate::types::UserPath;
+use std::path::Path;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -15,7 +16,7 @@ pub struct Options {
         default_value = "./",
         global = true
     )]
-    dotfiles_dir: PathBuf,
+    dotfiles_dir: UserPath,
 
     /// Specify linux distribution id to use
     #[structopt(short = "D", long = "distro", value_name = "ID", global = true)]
@@ -28,7 +29,7 @@ pub struct Options {
 
 impl Options {
     /// Getter for dotfiles directory
-    pub fn dotfiles_dir(&self) -> &PathBuf {
+    pub fn dotfiles_dir(&self) -> &Path {
         &self.dotfiles_dir
     }
 
