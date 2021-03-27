@@ -147,7 +147,8 @@ And now:
 
 ### Configuration
 
-More comprehensive documentation is coming soon.
+More comprehensive documentation is coming soon. For now you can find an example
+config file [here](https://github.com/fimmind/Dotfiles/blob/master/dotm-arch.yaml).
 
 ## LICENCE
 
