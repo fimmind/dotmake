@@ -40,7 +40,7 @@ impl Add {
             }
             print_info!("Replacing `{}` with a newly added file", dest.display());
         } else {
-            print_info!("Moving `{}` to your dotfiles", dest.display());
+            print_info!("Moving `{}` to your dotfiles", file.display());
         }
         move_file(&file, &dest)?;
 
