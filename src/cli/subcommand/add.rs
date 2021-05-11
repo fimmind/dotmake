@@ -1,11 +1,12 @@
 //! Subcommand that moves a given file to Dotifiles direcotry and crates a
 //! symlink instead
 
-use crate::types::UserPath;
 use crate::cli;
 use crate::os::{get_file_name, move_file, symlink};
+use crate::types::UserPath;
 use std::error::Error;
 use std::ffi::OsString;
+use std::path::Path;
 use structopt::StructOpt;
 
 /// Move a file to dotfiles directory, replacing it with a symlink
@@ -22,10 +23,14 @@ pub struct Add {
 
 impl Add {
     pub fn perform(&self) -> Result<(), Box<dyn Error>> {
-        let dest = cli::options().dotfiles_dir().join(match &self.with_name {
-            Some(name) => name,
-            None => get_file_name(&self.file)?,
-        });
+        // Remove trailing slashes to prevent potential errors when linking
+        let file = self.file.components().as_path();
+        let with_name = match &self.with_name {
+            Some(name) => Path::new(name).components().as_path().as_os_str(),
+            None => get_file_name(&file)?,
+        };
+
+        let dest = cli::options().dotfiles_dir().join(&with_name);
 
         if dest.exists() {
             print_warn!("File `{}` already exists", dest.display());
@@ -37,15 +42,15 @@ impl Add {
         } else {
             print_info!("Moving `{}` to your dotfiles", dest.display());
         }
-        move_file(&self.file, &dest)?;
+        move_file(&file, &dest)?;
 
         let dest = dest.canonicalize()?;
         print_info!(
             "Creating symlink `{}` -> `{}`",
-            self.file.display(),
+            file.display(),
             dest.display()
         );
-        symlink(dest, &self.file)?;
+        symlink(dest, &file)?;
         Ok(())
     }
 }
