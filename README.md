@@ -5,12 +5,12 @@ This software is still under development and **SHOULD NOT** be considered stable
 
 When your Linux configuration files (aka. dotfiles) get comparatively large, you
 may realize that you need something that will help you automatically install
-them to a new system. At first this might be something as simple a small script
-(or a Makefile) that creates soft links and, for example, installs the necessary
-packages. But the more configuration is added to your dotfiles directory, the
-larger this script becomes alarge nd at some point may end up in a complete mess
-(this is what happened to me, personally.) Here is when `dotmake` is meant to
-help you.
+them to a new system. At first this might be something as simple as a small
+script (or a Makefile) that creates soft links and, for example, installs the
+necessary packages. But the more configuration is added to your dotfiles
+directory, the larger this script becomes and for this reason at some point it
+may end up in a complete mess (this is what happened to me, personally.) Here is
+when `dotmake` is meant to help you.
 
 It provides a convenient way of splitting your configuration into separate
 pieces (called `rules`, just like in Makefile) in order to keep everything
@@ -40,8 +40,8 @@ using [rustup](https://rustup.rs/) (Don't forget to add `~/.cargo/bin` into your
 $ cargo install --git https://github.com/fimmind/dotmake
 ```
 
-If you don't want to add `~/.cargo/bin` into your `PATH`, you can also specify
-an another place for installation (e.g. `~/.local/bin`) using `cargo`'s `--root`
+If you don't want to add `~/.cargo/bin` into your `PATH`, you can specify an
+another place for installation (e.g. `~/.local/bin`) using `cargo`'s `--root`
 option. Pay attention to the fact that cargo only allows installation into
 folders named `bin`. Thus, you have to specify the directory containing `bin`,
 not the path to `bin` folder itself. For example, to install `dotmake` into
@@ -143,7 +143,7 @@ Then:
 - `dotmake exec foo 1` will print `action 1` on the screen;
 - `dotmake exec foo 2` will do nothing, since `deps` is treated as a normal
   action that just does nothing and only specifies the rule's dependencies;
-- `dotmake exec foo 3` will print a name of the automatically created temporary
+- `dotmake exec foo 3` will print the name of an automatically created temporary
   directory;
 - for any other number `dotmake exec foo n` will exit with error, since `foo`
   only has three actions.
